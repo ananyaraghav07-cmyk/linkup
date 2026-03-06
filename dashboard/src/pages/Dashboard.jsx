@@ -6,6 +6,7 @@
  * - Medical Staff (Doctor/Nurse): Patient vitals, health data, medical info
  * - Admin: System infrastructure, network stats, technical monitoring
  */
+import { lazy, Suspense } from 'react';
 import HeartRateCard from '../components/HeartRateCard';
 import Spo2Card from '../components/Spo2Card';
 import TemperatureCard from '../components/TemperatureCard';
@@ -13,23 +14,37 @@ import StatusCard from '../components/StatusCard';
 import EventLogCard from '../components/EventLogCard';
 import PatientLogCard from '../components/PatientLogCard';
 import NetworkStatsCard from '../components/NetworkStatsCard';
-import AmbulanceTrackerCard from '../components/AmbulanceTrackerCard';
 import PredictiveHealthCard from '../components/PredictiveHealthCard';
-import EdgeCloudVisualizerCard from '../components/EdgeCloudVisualizerCard';
 import NetworkQoSCard from '../components/NetworkQoSCard';
 import HospitalReadinessCard from '../components/HospitalReadinessCard';
-import ScenarioPlaybackCard from '../components/ScenarioPlaybackCard';
 import MultiPatientCard from '../components/MultiPatientCard';
 // Advanced Features - Phase 2
-import HandoverReportCard from '../components/HandoverReportCard';
 import EdgeFailureBackupCard from '../components/EdgeFailureBackupCard';
-import DigitalTwinVisualizationCard from '../components/DigitalTwinVisualizationCard';
 import NationalEmergencyNetworkCard from '../components/NationalEmergencyNetworkCard';
 // AI Treatment Recommendations
 
 
 // Role-Based Access Control
-import { isMedicalRole, isAdminRole, getRoleDisplayName, getRoleIcon } from '../utils/rbac';
+import { isMedicalRole, isAdminRole, getRoleIcon } from '../utils/rbac';
+
+const AmbulanceTrackerCard = lazy(() => import('../components/AmbulanceTrackerCard'));
+const DigitalTwinVisualizationCard = lazy(() => import('../components/DigitalTwinVisualizationCard'));
+const EdgeCloudVisualizerCard = lazy(() => import('../components/EdgeCloudVisualizerCard'));
+const HandoverReportCard = lazy(() => import('../components/HandoverReportCard'));
+const ScenarioPlaybackCard = lazy(() => import('../components/ScenarioPlaybackCard'));
+
+function CardFallback({ title = 'Loading…' }) {
+    return (
+        <div className="card vital-card">
+            <div className="card-body">
+                <div className="vital-header">
+                    <span className="vital-icon">⏳</span>
+                    <span className="vital-title">{title}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function Dashboard({
     patientData,
@@ -48,6 +63,12 @@ function Dashboard({
     const vitals = patientData?.vitals || {};
     const status = patientData?.status || 'normal';
 
+    const DashboardGrid = ({ children }) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
+            {children}
+        </div>
+    );
+
     // Medical Staff Dashboard
     if (isMedicalRole(userRole)) {
         return (
@@ -65,11 +86,11 @@ function Dashboard({
                     </p>
                 </div>
 
-                <div className="container-fluid px-0">
-                    {/* Multi-Patient Overview */}
-                    {patients && patients.length > 0 && (
-                        <div className="row g-3 mb-3">
-                            <div className="col-12">
+                <div className="space-y-8">
+                    <DashboardGrid>
+                        {/* Multi-Patient Overview (full width) */}
+                        {patients && patients.length > 0 && (
+                            <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
                                 <MultiPatientCard
                                     patients={patients}
                                     allPatientsData={allPatientsData}
@@ -77,35 +98,19 @@ function Dashboard({
                                     onSelectPatient={onSelectPatient}
                                 />
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* Vital Signs Row */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-md-6">
-                            <HeartRateCard
-                                value={vitals.heartRate}
-                                history={history}
-                                status={status}
-                            />
+                        {/* Primary vitals */}
+                        <div className="min-w-0">
+                            <HeartRateCard value={vitals.heartRate} history={history} status={status} />
                         </div>
-                        <div className="col-12 col-md-6">
-                            <Spo2Card
-                                value={vitals.spo2}
-                                status={status}
-                            />
+                        <div className="min-w-0">
+                            <Spo2Card value={vitals.spo2} status={status} />
                         </div>
-                    </div>
-
-                    {/* Temperature & Status */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-md-6">
-                            <TemperatureCard
-                                value={vitals.temperature}
-                                status={status}
-                            />
+                        <div className="min-w-0">
+                            <TemperatureCard value={vitals.temperature} status={status} />
                         </div>
-                        <div className="col-12 col-md-6">
+                        <div className="min-w-0">
                             <StatusCard
                                 status={status}
                                 patientName={patientData?.patientName}
@@ -113,61 +118,40 @@ function Dashboard({
                                 alerts={patientData?.alerts}
                             />
                         </div>
-                    </div>
 
-
-
-                    {/* Predictive Health & Hospital Readiness */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-lg-6">
-                            <PredictiveHealthCard
-                                vitals={vitals}
-                                history={history}
-                            />
+                        {/* Secondary insights */}
+                        <div className="sm:col-span-2 min-w-0">
+                            <PredictiveHealthCard vitals={vitals} history={history} />
                         </div>
-                        <div className="col-12 col-lg-6">
-                            <HospitalReadinessCard
-                                patientData={patientData}
-                            />
+                        <div className="sm:col-span-2 min-w-0">
+                            <HospitalReadinessCard patientData={patientData} />
                         </div>
-                    </div>
 
-                    {/* Ambulance Tracker */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12">
-                            <AmbulanceTrackerCard />
+                        {/* Larger widgets */}
+                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
+                            <Suspense fallback={<CardFallback title="Ambulance Tracker" />}>
+                                <AmbulanceTrackerCard />
+                            </Suspense>
                         </div>
-                    </div>
-
-                    {/* Patient Vitals Log */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12">
+                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
                             <PatientLogCard patientLogs={patientLogs} />
                         </div>
-                    </div>
-
-
-                    {/* Handover Report */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12">
-                            <HandoverReportCard
-                                patientData={patientData}
-                                vitals={vitals}
-                                history={history}
-                                ambulanceData={null}
-                            />
+                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
+                            <Suspense fallback={<CardFallback title="Handover Report" />}>
+                                <HandoverReportCard
+                                    patientData={patientData}
+                                    vitals={vitals}
+                                    history={history}
+                                    ambulanceData={null}
+                                />
+                            </Suspense>
                         </div>
-                    </div>
-
-                    {/* Digital Twin Visualization */}
-                    <div className="row g-3">
-                        <div className="col-12">
-                            <DigitalTwinVisualizationCard
-                                vitals={vitals}
-                                patientData={patientData}
-                            />
+                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
+                            <Suspense fallback={<CardFallback title="Digital Twin Visualization" />}>
+                                <DigitalTwinVisualizationCard vitals={vitals} patientData={patientData} />
+                            </Suspense>
                         </div>
-                    </div>
+                    </DashboardGrid>
                 </div>
             </>
         );
@@ -188,11 +172,11 @@ function Dashboard({
                     </p>
                 </div>
 
-                <div className="container-fluid px-0">
-                    {/* Connection Status Overview */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-md-4">
-                            <div className="card h-100" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%)' }}>
+                <div className="space-y-8">
+                    <DashboardGrid>
+                        {/* Connection Status Overview */}
+                        <div className="min-w-0">
+                            <div className="card vital-card h-100" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%)' }}>
                                 <div className="card-body text-center">
                                     <h3 className="text-white mb-2">🌐</h3>
                                     <h5 className="text-white">System Status</h5>
@@ -202,8 +186,8 @@ function Dashboard({
                                 </div>
                             </div>
                         </div>
-                        <div className="col-12 col-md-4">
-                            <div className="card h-100" style={{ background: 'linear-gradient(135deg, #1a472a 0%, #2e7d32 100%)' }}>
+                        <div className="min-w-0">
+                            <div className="card vital-card h-100" style={{ background: 'linear-gradient(135deg, #1a472a 0%, #2e7d32 100%)' }}>
                                 <div className="card-body text-center">
                                     <h3 className="text-white mb-2">⚡</h3>
                                     <h5 className="text-white">Network Latency</h5>
@@ -211,8 +195,8 @@ function Dashboard({
                                 </div>
                             </div>
                         </div>
-                        <div className="col-12 col-md-4">
-                            <div className="card h-100" style={{ background: 'linear-gradient(135deg, #4a1a6b 0%, #7b1fa2 100%)' }}>
+                        <div className="min-w-0">
+                            <div className="card vital-card h-100" style={{ background: 'linear-gradient(135deg, #4a1a6b 0%, #7b1fa2 100%)' }}>
                                 <div className="card-body text-center">
                                     <h3 className="text-white mb-2">📡</h3>
                                     <h5 className="text-white">Active Connections</h5>
@@ -220,49 +204,40 @@ function Dashboard({
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Edge/Cloud Visualizer & Network QoS */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-lg-6">
-                            <EdgeCloudVisualizerCard connected={connected} />
+                        {/* Edge/Cloud + QoS */}
+                        <div className="sm:col-span-2 min-w-0">
+                            <Suspense fallback={<CardFallback title="Edge vs Cloud Processing" />}>
+                                <EdgeCloudVisualizerCard connected={connected} />
+                            </Suspense>
                         </div>
-                        <div className="col-12 col-lg-6">
+                        <div className="sm:col-span-2 min-w-0">
                             <NetworkQoSCard connected={connected} latency={latency} />
                         </div>
-                    </div>
 
-                    {/* Edge Failure Backup & National Network */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-lg-6">
+                        {/* Backup + National */}
+                        <div className="sm:col-span-2 min-w-0">
                             <EdgeFailureBackupCard connected={connected} />
                         </div>
-                        <div className="col-12 col-lg-6">
+                        <div className="sm:col-span-2 min-w-0">
                             <NationalEmergencyNetworkCard />
                         </div>
-                    </div>
 
-                    {/* System Event Log & Network Stats */}
-                    <div className="row g-3 mb-3">
-                        <div className="col-12 col-lg-8">
+                        {/* Event log + stats */}
+                        <div className="sm:col-span-2 lg:col-span-2 2xl:col-span-3 min-w-0">
                             <EventLogCard events={events} />
                         </div>
-                        <div className="col-12 col-lg-4">
-                            <NetworkStatsCard
-                                connected={connected}
-                                latency={latency}
-                                packetRate={1}
-                                lastUpdate={lastUpdate}
-                            />
+                        <div className="min-w-0">
+                            <NetworkStatsCard connected={connected} latency={latency} packetRate={1} lastUpdate={lastUpdate} />
                         </div>
-                    </div>
 
-                    {/* Scenario Playback */}
-                    <div className="row g-3">
-                        <div className="col-12">
-                            <ScenarioPlaybackCard />
+                        {/* Scenario Playback (full width) */}
+                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
+                            <Suspense fallback={<CardFallback title="Scenario Playback" />}>
+                                <ScenarioPlaybackCard />
+                            </Suspense>
                         </div>
-                    </div>
+                    </DashboardGrid>
                 </div>
             </>
         );

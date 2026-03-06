@@ -7,7 +7,7 @@
  * Role-based display for different user types.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../i18n';
 import { getRoleDisplayName, getRoleIcon, isMedicalRole, isAdminRole } from '../utils/rbac';
 
@@ -38,6 +38,8 @@ function Navbar({
     onToggleSimulator,
     theme,
     onToggleTheme,
+    notifications,
+    onOpenNotifications,
     patients,
     selectedPatientId,
     onSelectPatient,
@@ -60,34 +62,7 @@ function Navbar({
     const [langSearch, setLangSearch] = useState('');
     const langDropdownRef = useRef(null);
 
-    // Notification dropdown state
-    const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
-    const notifDropdownRef = useRef(null);
-
-    // Sample notifications
-    const [notifications, setNotifications] = useState([
-        { id: 1, type: 'critical', title: 'Critical Alert', message: 'Patient AMB-001 heart rate exceeds 130 BPM', time: '2 min ago', read: false },
-        { id: 2, type: 'warning', title: 'Warning', message: 'SpO2 levels dropping for Patient AMB-003', time: '5 min ago', read: false },
-        { id: 3, type: 'info', title: 'System Update', message: 'New ambulance AMB-006 connected to network', time: '10 min ago', read: false },
-        { id: 4, type: 'success', title: 'Patient Stable', message: 'AMB-002 vitals returned to normal', time: '15 min ago', read: true },
-        { id: 5, type: 'info', title: 'Shift Change', message: 'Dr. Smith has logged in', time: '20 min ago', read: true },
-    ]);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
-
-    const markAsRead = (id) => {
-        setNotifications(prev => prev.map(n =>
-            n.id === id ? { ...n, read: true } : n
-        ));
-    };
-
-    const markAllAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
-
-    const clearNotification = (id) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
-    };
+    const unreadCount = useMemo(() => (notifications || []).filter(n => !n.read).length, [notifications]);
 
     // Get current language
     const currentLang = LANGUAGES.find(l => l.code === language) || LANGUAGES[0];
@@ -107,9 +82,6 @@ function Navbar({
             if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
                 setLangDropdownOpen(false);
                 setLangSearch('');
-            }
-            if (notifDropdownRef.current && !notifDropdownRef.current.contains(event.target)) {
-                setNotifDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -151,7 +123,7 @@ function Navbar({
     return (
         <nav className="top-navbar">
             <div className="navbar-left">
-                {/* Hamburger Menu Button */}
+                {/* Menu button (mobile header collapse) */}
                 <button
                     className={`hamburger-btn ${sidebarOpen ? 'active' : ''}`}
                     onClick={onMenuToggle}
@@ -162,7 +134,7 @@ function Navbar({
                     <span className="hamburger-line"></span>
                 </button>
 
-                {/* Page Title - visible on mobile */}
+                {/* Logo + Title (mobile) */}
                 <div className="navbar-title d-lg-none">
                     <span className="title-icon">🏥</span>
                     <span className="title-text">{t('lifelinkTwin')}</span>
@@ -204,8 +176,45 @@ function Navbar({
                     </div>
                 )}
 
-                {/* Language Selector Dropdown */}
-                <div className="language-selector me-2" ref={langDropdownRef} style={{ position: 'relative' }}>
+                {/* Desktop controls (hide on mobile) */}
+                <div className="d-none d-sm-flex align-items-center gap-2">
+
+                    {/* Notification Bell */}
+                    <button
+                        type="button"
+                        className="notification-btn"
+                        onClick={onOpenNotifications}
+                        aria-label="Open notifications"
+                    >
+                        <span className="notification-icon">🔔</span>
+                        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
+                    </button>
+
+                    {/* System power toggle (simulator) */}
+                    <button
+                        type="button"
+                        className={`btn btn-sm ${simulatorOn ? 'btn-success' : 'btn-outline-secondary'}`}
+                        onClick={onToggleSimulator}
+                        aria-label="System power"
+                        style={{ borderRadius: '10px' }}
+                    >
+                        {simulatorOn ? '⏻ ON' : '⏻ OFF'}
+                    </button>
+
+                    {/* Theme toggle */}
+                    <button
+                        type="button"
+                        className="theme-toggle-btn"
+                        onClick={onToggleTheme}
+                        aria-label="Toggle theme"
+                    >
+                        {theme === 'dark' ? '🌙' : '☀️'}
+                    </button>
+
+                </div>
+
+                {/* Language Selector Dropdown (desktop/tablet) */}
+                <div className="language-selector me-2 d-none d-sm-block" ref={langDropdownRef} style={{ position: 'relative' }}>
                     <button
                         className="lang-trigger-btn d-flex align-items-center gap-2"
                         onClick={() => setLangDropdownOpen(!langDropdownOpen)}
@@ -390,77 +399,18 @@ function Navbar({
                     <span className="time-text">{time}</span>
                 </div>
 
-                {/* Notifications */}
-                <div className="notification-wrapper" ref={notifDropdownRef} style={{ position: 'relative' }}>
-                    <button
-                        className="notification-btn"
-                        onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                    >
-                        <span className="notification-icon">🔔</span>
-                        {unreadCount > 0 && (
-                            <span className="notification-badge">{unreadCount}</span>
-                        )}
-                    </button>
-
-                    {notifDropdownOpen && (
-                        <div className="notification-dropdown">
-                            <div className="notif-header">
-                                <h4>🔔 Notifications</h4>
-                                {unreadCount > 0 && (
-                                    <button
-                                        className="mark-all-read"
-                                        onClick={markAllAsRead}
-                                    >
-                                        Mark all read
-                                    </button>
-                                )}
-                            </div>
-
-                            <div className="notif-list">
-                                {notifications.length === 0 ? (
-                                    <div className="notif-empty">
-                                        <span>✨</span>
-                                        <p>No notifications</p>
-                                    </div>
-                                ) : (
-                                    notifications.map(notif => (
-                                        <div
-                                            key={notif.id}
-                                            className={`notif-item ${notif.type} ${notif.read ? 'read' : 'unread'}`}
-                                            onClick={() => markAsRead(notif.id)}
-                                        >
-                                            <div className="notif-icon">
-                                                {notif.type === 'critical' ? '🔴' :
-                                                    notif.type === 'warning' ? '🟡' :
-                                                        notif.type === 'success' ? '🟢' : '🔵'}
-                                            </div>
-                                            <div className="notif-content">
-                                                <div className="notif-title">{notif.title}</div>
-                                                <div className="notif-message">{notif.message}</div>
-                                                <div className="notif-time">{notif.time}</div>
-                                            </div>
-                                            <button
-                                                className="notif-close"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    clearNotification(notif.id);
-                                                }}
-                                            >
-                                                ✕
-                                            </button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-
-                            <div className="notif-footer">
-                                <button className="view-all-btn">
-                                    View All Notifications
-                                </button>
-                            </div>
-                        </div>
+                {/* Notifications (opens shared drawer) */}
+                <button
+                    type="button"
+                    className="notification-btn"
+                    onClick={onOpenNotifications}
+                    aria-label="Open notifications"
+                >
+                    <span className="notification-icon">🔔</span>
+                    {unreadCount > 0 && (
+                        <span className="notification-badge">{unreadCount}</span>
                     )}
-                </div>
+                </button>
 
                 {/* User Menu with Logout */}
                 <div className="user-menu">

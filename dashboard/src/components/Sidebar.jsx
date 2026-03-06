@@ -11,8 +11,35 @@ import { NavLink } from 'react-router-dom';
 import { useLanguage } from '../i18n';
 import { isMenuItemAllowed, isMedicalRole, isAdminRole, getRoleIcon } from '../utils/rbac';
 
-function Sidebar({ isOpen, onToggle, patientData, userRole }) {
-    const { t } = useLanguage();
+const LANGUAGES = [
+    { code: 'en', nativeName: 'English' },
+    { code: 'hi', nativeName: 'हिन्दी' },
+    { code: 'ta', nativeName: 'தமிழ்' },
+    { code: 'te', nativeName: 'తెలుగు' },
+    { code: 'mr', nativeName: 'मराठी' },
+    { code: 'kn', nativeName: 'ಕನ್ನಡ' },
+    { code: 'ml', nativeName: 'മലയാളം' },
+    { code: 'bn', nativeName: 'বাংলা' },
+    { code: 'gu', nativeName: 'ગુજરાતી' },
+    { code: 'pa', nativeName: 'ਪੰਜਾਬੀ' },
+    { code: 'or', nativeName: 'ଓଡ଼ିଆ' },
+    { code: 'as', nativeName: 'অসমীয়া' },
+    { code: 'ur', nativeName: 'اردو' },
+    { code: 'sa', nativeName: 'संस्कृतम्' },
+];
+
+function Sidebar({
+    isOpen,
+    onToggle,
+    patientData,
+    userRole,
+    theme,
+    onToggleTheme,
+    simulatorOn,
+    onToggleSimulator,
+    onOpenNotifications,
+}) {
+    const { t, language, changeLanguage } = useLanguage();
 
     // All menu items - will be filtered based on role
     const allMenuItems = [
@@ -86,6 +113,62 @@ function Sidebar({ isOpen, onToggle, patientData, userRole }) {
                     >
                         ✕
                     </button>
+                </div>
+
+                {/* Mobile control panel (required: theme, language, notifications, system toggle) */}
+                <div className="sm:hidden" style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)' }}>
+                    <div className="d-flex flex-column" style={{ gap: '10px' }}>
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-light"
+                            onClick={onToggleTheme}
+                            aria-label="Toggle theme"
+                            style={{ borderRadius: '10px', textAlign: 'left' }}
+                        >
+                            {theme === 'dark' ? '🌙 Dark theme' : '☀️ Light theme'}
+                        </button>
+
+                        <button
+                            type="button"
+                            className={`btn btn-sm ${simulatorOn ? 'btn-success' : 'btn-outline-secondary'}`}
+                            onClick={onToggleSimulator}
+                            aria-label="System power"
+                            style={{ borderRadius: '10px', textAlign: 'left' }}
+                        >
+                            {simulatorOn ? '⏻ System: ON' : '⏻ System: OFF'}
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-primary"
+                            onClick={onOpenNotifications}
+                            aria-label="Open notifications"
+                            style={{ borderRadius: '10px', textAlign: 'left' }}
+                        >
+                            🔔 Notifications
+                        </button>
+
+                        <div>
+                            <div className="small" style={{ color: 'var(--text-muted)', marginBottom: '6px' }}>🌐 {t('language')}</div>
+                            <select
+                                className="form-select form-select-sm"
+                                value={language}
+                                onChange={(e) => changeLanguage(e.target.value)}
+                                style={{
+                                    backgroundColor: 'var(--bg-card)',
+                                    color: 'var(--text-primary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: '10px',
+                                }}
+                            >
+                                {LANGUAGES.map((l) => (
+                                    <option key={l.code} value={l.code}>
+                                        {l.nativeName}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Patient Quick Info (Medical Staff Only) */}

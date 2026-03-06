@@ -40,6 +40,11 @@
     --temp-color: #fbbf24;
 
     --transition-speed: 0.3s;
+
+    /* Responsive layout scale */
+    --padding-card: 16px;
+    --grid-gap: 20px;
+    --section-gap: 32px;
 }
 
 /* ==================== CSS Variables - Light Theme ==================== */
@@ -643,18 +648,26 @@ body {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem;
+    padding: 0;
 }
 
-@media (min-width: 768px) {
-    .content-wrapper {
-        padding: 1.5rem;
+/* Dashboard container: centered, max width, responsive padding */
+.dashboard-container {
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+@media (min-width: 640px) {
+    .dashboard-container {
+        padding: 20px;
     }
 }
 
-@media (min-width: 992px) {
-    .content-wrapper {
-        padding: 1.5rem 2rem;
+@media (min-width: 1024px) {
+    .dashboard-container {
+        padding: 24px;
     }
 }
 
@@ -664,19 +677,13 @@ body {
 }
 
 .page-title {
-    font-size: 1.25rem;
+    font-size: clamp(18px, 1.6vw, 28px);
     font-weight: 700;
     margin-bottom: 0.25rem;
 }
 
-@media (min-width: 768px) {
-    .page-title {
-        font-size: 1.5rem;
-    }
-}
-
 .page-subtitle {
-    font-size: 0.8rem;
+    font-size: clamp(12px, 1.1vw, 14px);
     color: var(--text-muted);
 }
 
@@ -689,10 +696,13 @@ body {
     transition: all 0.3s ease;
     height: 100%;
     min-height: 200px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .vital-card .card-body {
     padding: 1rem;
+    min-width: 0;
 }
 
 @media (min-width: 768px) {
@@ -716,7 +726,7 @@ body {
 }
 
 .vital-title {
-    font-size: 0.9rem;
+    font-size: clamp(14px, 1.2vw, 18px);
     font-weight: 500;
     color: var(--text-secondary);
 }
@@ -728,26 +738,14 @@ body {
 }
 
 .vital-value {
-    font-size: 2rem;
+    font-size: clamp(20px, 2vw, 32px);
     font-weight: 700;
     font-family: 'JetBrains Mono', monospace;
     line-height: 1;
 }
 
-@media (min-width: 576px) {
-    .vital-value {
-        font-size: 2.5rem;
-    }
-}
-
-@media (min-width: 992px) {
-    .vital-value {
-        font-size: 3rem;
-    }
-}
-
 .vital-unit {
-    font-size: 0.9rem;
+    font-size: clamp(12px, 1vw, 14px);
     color: var(--text-muted);
 }
 

@@ -13,6 +13,7 @@ import { LanguageProvider, useLanguage } from './i18n';
 // Components
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
+import NotificationDrawer from './components/NotificationDrawer';
 
 // Pages
 import {
@@ -39,6 +40,16 @@ function App() {
 
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Notifications (shared between header + mobile drawer)
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, type: 'critical', title: 'Critical Alert', message: 'Patient AMB-001 heart rate exceeds 130 BPM', time: '2 min ago', read: false },
+    { id: 2, type: 'warning', title: 'Warning', message: 'SpO2 levels dropping for Patient AMB-003', time: '5 min ago', read: false },
+    { id: 3, type: 'info', title: 'System Update', message: 'New ambulance AMB-006 connected to network', time: '10 min ago', read: false },
+    { id: 4, type: 'success', title: 'Patient Stable', message: 'AMB-002 vitals returned to normal', time: '15 min ago', read: true },
+    { id: 5, type: 'info', title: 'Shift Change', message: 'Dr. Smith has logged in', time: '20 min ago', read: true },
+  ]);
 
   // Theme state (dark/light)
   const [theme, setTheme] = useState(() => {
@@ -133,6 +144,18 @@ function App() {
 
   // Toggle sidebar
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const markNotificationAsRead = (id) => {
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  };
+
+  const clearNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
 
   // Toggle theme
   const toggleTheme = useCallback(() => {
@@ -586,6 +609,11 @@ function App() {
             onToggle={toggleSidebar}
             patientData={patientData}
             userRole={user?.role}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            simulatorOn={simulatorOn}
+            onToggleSimulator={toggleSimulator}
+            onOpenNotifications={() => setNotificationsOpen(true)}
           />
 
           {/* Main Content Area */}
@@ -600,6 +628,8 @@ function App() {
               onToggleSimulator={toggleSimulator}
               theme={theme}
               onToggleTheme={toggleTheme}
+              notifications={notifications}
+              onOpenNotifications={() => setNotificationsOpen(true)}
               patients={patients}
               selectedPatientId={selectedPatientId}
               onSelectPatient={selectPatient}
@@ -610,7 +640,7 @@ function App() {
 
             {/* Dashboard Content */}
             <main className="main-content">
-              <div className="content-wrapper">
+              <div className="content-wrapper dashboard-container">
                 <Routes>
                   <Route
                     path="/"
@@ -686,6 +716,15 @@ function App() {
                 <span>Last Update: {lastUpdate || '--:--:--'}</span>
               </footer>
             </main>
+
+            <NotificationDrawer
+              open={notificationsOpen}
+              onClose={() => setNotificationsOpen(false)}
+              notifications={notifications}
+              onMarkAsRead={markNotificationAsRead}
+              onMarkAllAsRead={markAllNotificationsAsRead}
+              onClear={clearNotification}
+            />
           </div>
         </div>
       </Router>
