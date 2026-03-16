@@ -11,6 +11,10 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const lerp = (current, target, speed) => current + (target - current) * speed;
 
+const clampInt = (value, min, max) => Math.round(clamp(value, min, max));
+
+const WORSEN_DEFAULT_DURATION_MS = 60_000;
+
 const createScenarios = () => ({
   Cardiac: [
     { name: 'Stable', duration: 45, targets: { hr: 76, spo2: 97, temp: 36.7 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
@@ -55,6 +59,25 @@ export function createVitalsSimulator() {
   const scenariosByCondition = createScenarios();
   const patientStates = new Map();
 
+  const ensureState = (patientId, condition) => {
+    const safeId = patientId || 'unknown';
+    const scenarios = getScenariosFor(condition || DEFAULT_CONDITION);
+    const existing = patientStates.get(safeId);
+    if (existing) return existing;
+
+    const init = {
+      currentHR: scenarios[0].targets.hr,
+      currentSpo2: scenarios[0].targets.spo2,
+      currentTemp: scenarios[0].targets.temp,
+      scenarioIndex: 0,
+      scenarioTimer: 0,
+      worsenUntilMs: 0,
+      worsenStartedAtMs: 0,
+    };
+    patientStates.set(safeId, init);
+    return init;
+  };
+
   const getScenariosFor = (condition) => {
     return scenariosByCondition[condition] || scenariosByCondition[DEFAULT_CONDITION];
   };
@@ -72,9 +95,36 @@ export function createVitalsSimulator() {
         currentTemp: scenarios[0].targets.temp,
         scenarioIndex: 0,
         scenarioTimer: 0,
+        worsenUntilMs: 0,
+        worsenStartedAtMs: 0,
       });
     }
     return patientStates.get(patientId);
+  };
+
+  const isWorsenActive = (patientId) => {
+    const state = patientStates.get(patientId);
+    if (!state) return false;
+    return Boolean(state.worsenUntilMs && Date.now() < state.worsenUntilMs);
+  };
+
+  const activateWorsen = (patientId, durationMs = WORSEN_DEFAULT_DURATION_MS, condition) => {
+    const now = Date.now();
+    const state = ensureState(patientId, condition);
+
+    if (!state.worsenStartedAtMs || now >= state.worsenUntilMs) {
+      state.worsenStartedAtMs = now;
+    }
+
+    const nextUntil = now + Math.max(0, Number(durationMs) || 0);
+    state.worsenUntilMs = Math.max(state.worsenUntilMs || 0, nextUntil);
+  };
+
+  const stopWorsen = (patientId) => {
+    const state = patientStates.get(patientId);
+    if (!state) return;
+    state.worsenUntilMs = 0;
+    state.worsenStartedAtMs = 0;
   };
 
   const generate = (patient) => {
@@ -85,6 +135,9 @@ export function createVitalsSimulator() {
 
     const state = getOrInitState(patientId, scenarios);
     const currentScenario = scenarios[state.scenarioIndex];
+
+    const now = Date.now();
+    const worsenActive = Boolean(state.worsenUntilMs && now < state.worsenUntilMs);
 
     // Update scenario timer
     state.scenarioTimer++;
@@ -103,23 +156,41 @@ export function createVitalsSimulator() {
 
     const scenario = scenarios[state.scenarioIndex];
 
-    // Very smooth interpolation (slow changes)
-    state.currentHR = lerp(state.currentHR, scenario.targets.hr, 0.03);
-    state.currentSpo2 = lerp(state.currentSpo2, scenario.targets.spo2, 0.02);
-    state.currentTemp = lerp(state.currentTemp, scenario.targets.temp, 0.01);
+    const baseTargets = scenario.targets;
+    const worsenTargets = worsenActive
+      ? {
+        hr: clamp(baseTargets.hr + 42, 55, 155),
+        spo2: clamp(baseTargets.spo2 - 7.5, 85, 100),
+        temp: clamp(baseTargets.temp + 1.2, 35.5, 40.0),
+      }
+      : baseTargets;
+
+    // Smooth interpolation; accelerate when worsen-mode is active for immediate effect
+    const hrSpeed = worsenActive ? 0.085 : 0.03;
+    const spo2Speed = worsenActive ? 0.06 : 0.02;
+    const tempSpeed = worsenActive ? 0.04 : 0.01;
+
+    state.currentHR = lerp(state.currentHR, worsenTargets.hr, hrSpeed);
+    state.currentSpo2 = lerp(state.currentSpo2, worsenTargets.spo2, spo2Speed);
+    state.currentTemp = lerp(state.currentTemp, worsenTargets.temp, tempSpeed);
 
     // Add subtle natural variability
-    const heartRate = Math.round(
-      clamp(addNaturalVariability(state.currentHR, scenario.variability.hr, patientSeed), 50, 160)
+    const variabilityBoost = worsenActive ? 1.6 : 1;
+    const heartRate = clampInt(
+      addNaturalVariability(state.currentHR, scenario.variability.hr * variabilityBoost, patientSeed),
+      50,
+      170
     );
 
-    const spo2 = Math.round(
-      clamp(addNaturalVariability(state.currentSpo2, scenario.variability.spo2, patientSeed + 10), 85, 100)
+    const spo2 = clampInt(
+      addNaturalVariability(state.currentSpo2, scenario.variability.spo2 * variabilityBoost, patientSeed + 10),
+      82,
+      100
     );
 
     const temperature =
       Math.round(
-        clamp(addNaturalVariability(state.currentTemp, scenario.variability.temp, patientSeed + 20), 35.5, 40.0) * 10
+        clamp(addNaturalVariability(state.currentTemp, scenario.variability.temp * variabilityBoost, patientSeed + 20), 35.5, 40.0) * 10
       ) / 10;
 
     // Determine status based on vitals
@@ -145,6 +216,7 @@ export function createVitalsSimulator() {
       location: patient?.location,
       condition: patient?.condition,
       scenario: scenario.name,
+      worsenActive,
       vitals: {
         heartRate,
         spo2,
@@ -158,5 +230,8 @@ export function createVitalsSimulator() {
 
   return {
     generate,
+    isWorsenActive,
+    activateWorsen,
+    stopWorsen,
   };
 }

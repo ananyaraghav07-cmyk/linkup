@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import DashboardCard from './DashboardCard';
 
 function AmbulanceTrackerCard() {
     // Ambulance state
@@ -162,43 +163,28 @@ function AmbulanceTrackerCard() {
         }
     };
 
-    // Generate Google Maps embed URL
-    const getMapEmbedUrl = () => {
-        const origin = `${currentPosition.lat},${currentPosition.lng}`;
-        const destination = `${locations.hospital.lat},${locations.hospital.lng}`;
-        return `https://www.google.com/maps/embed/v1/directions?key=YOUR_API_KEY&origin=${origin}&destination=${destination}&mode=driving&zoom=12`;
-    };
-
-    // Fallback map with markers (static image for demo)
-    const getStaticMapUrl = () => {
-        const markers = `markers=color:red|label:A|${currentPosition.lat},${currentPosition.lng}&markers=color:green|label:H|${locations.hospital.lat},${locations.hospital.lng}`;
-        return `https://maps.googleapis.com/maps/api/staticmap?center=${currentPosition.lat},${currentPosition.lng}&zoom=11&size=600x300&maptype=roadmap&${markers}&key=YOUR_API_KEY`;
-    };
-
     return (
-        <div className="card vital-card ambulance-tracker-card">
-            <div className="card-body">
-                {/* Header */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="vital-header">
-                        <span className="vital-icon">🚑</span>
-                        <span className="vital-title">Live Ambulance Tracker</span>
-                    </div>
-                    <div className="d-flex gap-2">
-                        {!isSimulating ? (
-                            <button className="btn btn-sm btn-primary" onClick={startSimulation}>
-                                ▶️ Start Simulation
-                            </button>
-                        ) : (
-                            <button className="btn btn-sm btn-danger" onClick={stopSimulation}>
-                                ⏹️ Stop
-                            </button>
-                        )}
-                        <span className={`badge bg-${getStatusColor()}`}>
-                            {ambulanceData.status.toUpperCase().replace('-', ' ')}
-                        </span>
-                    </div>
+        <DashboardCard
+            icon="🚑"
+            title="Live Ambulance Tracker"
+            headerRight={(
+                <div className="d-flex" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {!isSimulating ? (
+                        <button className="btn btn-sm btn-primary" onClick={startSimulation}>
+                            ▶️ Start Simulation
+                        </button>
+                    ) : (
+                        <button className="btn btn-sm btn-danger" onClick={stopSimulation}>
+                            ⏹️ Stop
+                        </button>
+                    )}
+                    <span className={`badge bg-${getStatusColor()}`}>
+                        {ambulanceData.status.toUpperCase().replace('-', ' ')}
+                    </span>
                 </div>
+            )}
+            className="ambulance-tracker-card"
+        >
 
                 <div className="row g-3">
                     {/* Map Section */}
@@ -207,14 +193,14 @@ function AmbulanceTrackerCard() {
                             height: '300px',
                             borderRadius: '10px',
                             overflow: 'hidden',
-                            background: '#1e2430',
+                            background: 'var(--bg-input)',
                             position: 'relative'
                         }}>
                             {/* Simulated Map View */}
                             <div style={{
                                 width: '100%',
                                 height: '100%',
-                                background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                                background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-input) 100%)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 justifyContent: 'center',
@@ -226,8 +212,8 @@ function AmbulanceTrackerCard() {
                                     position: 'absolute',
                                     inset: 0,
                                     backgroundImage: `
-                                        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                                        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+                                        linear-gradient(var(--border-color) 1px, transparent 1px),
+                                        linear-gradient(90deg, var(--border-color) 1px, transparent 1px)
                                     `,
                                     backgroundSize: '30px 30px'
                                 }}></div>
@@ -236,8 +222,8 @@ function AmbulanceTrackerCard() {
                                 <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
                                     <defs>
                                         <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stopColor="#4ecdc4" />
-                                            <stop offset="100%" stopColor="#44a08d" />
+                                            <stop offset="0%" stopColor="var(--accent-cyan)" />
+                                            <stop offset="100%" stopColor="var(--accent-blue)" />
                                         </linearGradient>
                                     </defs>
                                     <path
@@ -250,7 +236,7 @@ function AmbulanceTrackerCard() {
                                     />
                                     <path
                                         d="M 50,250 Q 150,200 200,150 T 350,100 T 550,50"
-                                        stroke="#4ecdc4"
+                                        stroke="var(--accent-cyan)"
                                         strokeWidth="4"
                                         fill="none"
                                         strokeDasharray={`${ambulanceData.progress * 6}, 1000`}
@@ -265,7 +251,7 @@ function AmbulanceTrackerCard() {
                                     textAlign: 'center'
                                 }}>
                                     <div style={{ fontSize: '2rem' }}>🏥</div>
-                                    <small className="text-success">Hospital</small>
+                                    <small style={{ color: 'var(--status-normal)' }}>Hospital</small>
                                 </div>
 
                                 {/* Ambulance Marker (animated) */}
@@ -279,7 +265,7 @@ function AmbulanceTrackerCard() {
                                 }}>
                                     <div style={{
                                         fontSize: '2.5rem',
-                                        filter: 'drop-shadow(0 0 10px rgba(255,107,107,0.8))'
+                                        filter: 'drop-shadow(0 0 12px var(--status-critical))'
                                     }}>🚑</div>
                                     <div className="badge bg-danger">{ambulanceData.id}</div>
                                 </div>
@@ -292,7 +278,7 @@ function AmbulanceTrackerCard() {
                                     textAlign: 'center'
                                 }}>
                                     <div style={{ fontSize: '1.5rem' }}>📍</div>
-                                    <small className="text-info">Pickup</small>
+                                    <small style={{ color: 'var(--accent-cyan)' }}>Pickup</small>
                                 </div>
 
                                 {/* ETA Overlay */}
@@ -300,14 +286,15 @@ function AmbulanceTrackerCard() {
                                     position: 'absolute',
                                     top: '15px',
                                     left: '15px',
-                                    background: 'rgba(0,0,0,0.7)',
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-color)',
                                     padding: '10px 15px',
                                     borderRadius: '8px'
                                 }}>
-                                    <div className="text-warning fw-bold" style={{ fontSize: '1.5rem' }}>
+                                    <div className="fw-bold" style={{ fontSize: '1.5rem', color: 'var(--accent-cyan)' }}>
                                         {ambulanceData.status === 'on-scene' ? 'ARRIVED' : `${ambulanceData.eta} min`}
                                     </div>
-                                    <small className="text-muted">ETA to Hospital</small>
+                                    <small style={{ color: 'var(--text-muted)' }}>ETA to Hospital</small>
                                 </div>
 
                                 {/* Traffic Badge */}
@@ -315,7 +302,8 @@ function AmbulanceTrackerCard() {
                                     position: 'absolute',
                                     top: '15px',
                                     right: '15px',
-                                    background: 'rgba(0,0,0,0.7)',
+                                    background: 'var(--bg-card)',
+                                    border: '1px solid var(--border-color)',
                                     padding: '8px 12px',
                                     borderRadius: '8px'
                                 }}>
@@ -329,11 +317,14 @@ function AmbulanceTrackerCard() {
                                     href={`https://www.google.com/maps/dir/${currentPosition.lat},${currentPosition.lng}/${locations.hospital.lat},${locations.hospital.lng}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="btn btn-sm btn-outline-light"
+                                    className="btn btn-sm"
                                     style={{
                                         position: 'absolute',
                                         bottom: '15px',
-                                        right: '15px'
+                                        right: '15px',
+                                        background: 'var(--bg-input)',
+                                        border: '1px solid var(--border-color)',
+                                        color: 'var(--text-primary)'
                                     }}
                                 >
                                     🗺️ Open in Google Maps
@@ -347,10 +338,10 @@ function AmbulanceTrackerCard() {
                         {/* Progress */}
                         <div className="mb-3">
                             <div className="d-flex justify-content-between mb-2">
-                                <small className="text-muted">Journey Progress</small>
-                                <small className="text-light">{ambulanceData.progress}%</small>
+                                <small style={{ color: 'var(--text-muted)' }}>Journey Progress</small>
+                                <small style={{ color: 'var(--text-secondary)' }}>{ambulanceData.progress}%</small>
                             </div>
-                            <div className="progress" style={{ height: '8px', backgroundColor: '#1e2430' }}>
+                            <div className="progress" style={{ height: '8px', backgroundColor: 'var(--bg-input)' }}>
                                 <div
                                     className={`progress-bar bg-${getStatusColor()}`}
                                     style={{ width: `${ambulanceData.progress}%`, transition: 'width 0.5s ease' }}
@@ -361,69 +352,67 @@ function AmbulanceTrackerCard() {
                         {/* Stats Grid */}
                         <div className="row g-2 mb-3">
                             <div className="col-6">
-                                <div className="stat-box p-2 rounded" style={{ background: '#1e2430' }}>
-                                    <small className="text-muted d-block">Distance</small>
-                                    <span className="text-light fw-bold">{ambulanceData.distance} km</span>
+                                <div className="stat-box p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                                    <small className="d-block" style={{ color: 'var(--text-muted)' }}>Distance</small>
+                                    <span className="fw-bold" style={{ color: 'var(--text-primary)' }}>{ambulanceData.distance} km</span>
                                 </div>
                             </div>
                             <div className="col-6">
-                                <div className="stat-box p-2 rounded" style={{ background: '#1e2430' }}>
-                                    <small className="text-muted d-block">Speed</small>
-                                    <span className="text-light fw-bold">{ambulanceData.speed} km/h</span>
+                                <div className="stat-box p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                                    <small className="d-block" style={{ color: 'var(--text-muted)' }}>Speed</small>
+                                    <span className="fw-bold" style={{ color: 'var(--text-primary)' }}>{ambulanceData.speed} km/h</span>
                                 </div>
                             </div>
                             <div className="col-6">
-                                <div className="stat-box p-2 rounded" style={{ background: '#1e2430' }}>
-                                    <small className="text-muted d-block">ETA</small>
-                                    <span className="text-warning fw-bold">
+                                <div className="stat-box p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                                    <small className="d-block" style={{ color: 'var(--text-muted)' }}>ETA</small>
+                                    <span className="fw-bold" style={{ color: 'var(--accent-cyan)' }}>
                                         {ambulanceData.status === 'on-scene' ? 'Arrived' : `${ambulanceData.eta} min`}
                                     </span>
                                 </div>
                             </div>
                             <div className="col-6">
-                                <div className="stat-box p-2 rounded" style={{ background: '#1e2430' }}>
-                                    <small className="text-muted d-block">Traffic Delay</small>
+                                <div className="stat-box p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                                    <small className="d-block" style={{ color: 'var(--text-muted)' }}>Traffic Delay</small>
                                     <span className={`text-${getTrafficColor()} fw-bold`}>+{traffic.delay} min</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Ambulance Details */}
-                        <div className="ambulance-details p-2 rounded" style={{ background: '#1e2430' }}>
+                        <div className="ambulance-details p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <div className="d-flex justify-content-between align-items-center mb-2">
-                                <span className="text-muted">Unit</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Unit</span>
                                 <span className="badge bg-danger">{ambulanceData.id}</span>
                             </div>
                             <div className="d-flex justify-content-between align-items-center mb-2">
-                                <span className="text-muted">Driver</span>
-                                <span className="text-light">{ambulanceData.driver}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Driver</span>
+                                <span style={{ color: 'var(--text-primary)' }}>{ambulanceData.driver}</span>
                             </div>
                             <div className="d-flex justify-content-between align-items-center">
-                                <span className="text-muted">Destination</span>
-                                <span className="text-light">{locations.hospital.name}</span>
+                                <span style={{ color: 'var(--text-muted)' }}>Destination</span>
+                                <span style={{ color: 'var(--text-primary)' }}>{locations.hospital.name}</span>
                             </div>
                         </div>
 
                         {/* Traffic Incidents */}
                         {traffic.incidents.length > 0 && (
-                            <div className="mt-3 p-2 rounded" style={{ background: 'rgba(255,193,7,0.1)', border: '1px solid rgba(255,193,7,0.3)' }}>
+                            <div className="mt-3 p-2 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                                 <small className="text-warning d-block mb-2">⚠️ Traffic Incidents:</small>
                                 {traffic.incidents.map((incident, i) => (
-                                    <small key={i} className="text-muted d-block">• {incident}</small>
+                                    <small key={i} style={{ color: 'var(--text-muted)' }} className="d-block">• {incident}</small>
                                 ))}
                             </div>
                         )}
                     </div>
                 </div>
-            </div>
-
             <style>{`
                 @keyframes pulse {
                     0%, 100% { transform: scale(1); }
                     50% { transform: scale(1.1); }
                 }
             `}</style>
-        </div>
+        </DashboardCard>
     );
 }
 

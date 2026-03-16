@@ -6,8 +6,9 @@
  * Optimized for dark and light mode.
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import { useLanguage } from '../i18n';
+import DashboardCard from './DashboardCard';
 
 function MultiPatientCard({
     patients,
@@ -17,20 +18,7 @@ function MultiPatientCard({
 }) {
     const { t } = useLanguage();
 
-    // Dropdown state
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    const [search, setSearch] = useState('');
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -66,301 +54,270 @@ function MultiPatientCard({
         }
     };
 
-    // Count patients by status
-    const statusCounts = patients.reduce((acc, patient) => {
-        const data = allPatientsData[patient.id];
-        const status = data?.status || 'normal';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-    }, {});
+    const statusCounts = useMemo(() => {
+        return (patients || []).reduce((acc, patient) => {
+            const data = allPatientsData?.[patient.id];
+            const status = data?.status || 'normal';
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+        }, {});
+    }, [patients, allPatientsData]);
 
-    // Get selected patient details
-    const selectedPatient = patients.find(p => p.id === selectedPatientId);
-    const selectedData = allPatientsData[selectedPatientId];
+    const selectedPatient = useMemo(() => (patients || []).find((p) => p.id === selectedPatientId) || null, [patients, selectedPatientId]);
+    const selectedData = allPatientsData?.[selectedPatientId] || null;
     const selectedStatus = selectedData?.status || 'normal';
     const selectedVitals = selectedData?.vitals || {};
 
-    return (
-        <div className="card vital-card" style={{ overflow: 'visible' }}>
-            <div className="card-body" style={{ overflow: 'visible' }}>
-                {/* Header */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="vital-header">
-                        <span className="vital-icon">🚑</span>
-                        <span className="vital-title">{t('livePatientMonitor')}</span>
-                    </div>
-                    <div className="d-flex gap-2">
-                        {statusCounts.critical > 0 && (
-                            <span className="badge bg-danger">{statusCounts.critical} {t('critical')}</span>
-                        )}
-                        {statusCounts.warning > 0 && (
-                            <span className="badge bg-warning text-dark">{statusCounts.warning} {t('warning')}</span>
-                        )}
-                        <span className="badge bg-success">{statusCounts.normal || 0} {t('stable')}</span>
-                    </div>
-                </div>
+    const filteredPatients = useMemo(() => {
+        const q = String(search || '').trim().toLowerCase();
+        if (!q) return patients || [];
 
-                {/* Patient Dropdown Selector - Modern */}
-                <div className="patient-dropdown-selector mb-3" ref={dropdownRef} style={{ position: 'relative', zIndex: 200 }}>
-                    <small className="theme-text-muted d-block mb-2" style={{ color: 'var(--text-muted)' }}>{t('selectPatient')}</small>
-                    <div className="position-relative">
-                        {/* Dropdown Trigger */}
+        return (patients || []).filter((p) => {
+            const hay = `${p.id} ${p.name} ${p.ambulance} ${p.location} ${p.condition}`.toLowerCase();
+            return hay.includes(q);
+        });
+    }, [patients, search]);
+
+    return (
+        <DashboardCard
+            icon="🚑"
+            title={t('livePatientMonitor')}
+            headerRight={(
+                <div className="d-flex" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {statusCounts.critical > 0 && (
+                        <span className="badge bg-danger">{statusCounts.critical} {t('critical')}</span>
+                    )}
+                    {statusCounts.warning > 0 && (
+                        <span className="badge bg-warning text-dark">{statusCounts.warning} {t('warning')}</span>
+                    )}
+                    <span className="badge bg-success">{statusCounts.normal || 0} {t('stable')}</span>
+                </div>
+            )}
+        >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3" style={{ overflow: 'visible' }}>
+                {/* Selector */}
+                <div className="lg:col-span-1" style={{ minWidth: 0 }}>
+                    <div className="mb-2">
+                        <div className="d-flex justify-content-between align-items-center">
+                            <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('selectPatient')}</small>
+                            {selectedPatient && (
+                                <small className="text-truncate" style={{ color: 'var(--text-secondary)', maxWidth: '55%' }}>
+                                    {getStatusLabel(selectedStatus)}
+                                </small>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Mobile: simple dropdown */}
+                    <div className="lg:hidden">
+                        <select
+                            className="form-select ll-control"
+                            value={selectedPatientId}
+                            onChange={(e) => onSelectPatient?.(e.target.value)}
+                        >
+                            {(patients || []).map((p) => (
+                                <option key={p.id} value={p.id}>
+                                    {p.id} • {p.name} ({p.ambulance})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Desktop: search + list */}
+                    <div className="hidden lg:block">
+                        <input
+                            type="text"
+                            className="form-control ll-control"
+                            placeholder="Search patient / ambulance / location"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+
                         <div
-                            className="dropdown-trigger d-flex align-items-center justify-content-between p-2 rounded"
-                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="mt-2 rounded"
                             style={{
-                                backgroundColor: 'var(--bg-input, #1a2332)',
-                                border: `2px solid ${getStatusColor(selectedStatus)}`,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease',
-                                color: 'var(--text-primary)'
+                                border: '1px solid var(--border-color)',
+                                background: 'var(--bg-input)',
+                                maxHeight: '320px',
+                                overflowY: 'auto',
+                                overflowX: 'hidden',
                             }}
                         >
-                            <div className="d-flex align-items-center gap-2">
-                                {selectedPatient && (
-                                    <>
-                                        <span style={{ fontSize: '1.2rem' }}>{getConditionIcon(selectedPatient.condition)}</span>
-                                        <div
-                                            style={{
-                                                width: '10px',
-                                                height: '10px',
-                                                borderRadius: '50%',
-                                                backgroundColor: getStatusColor(selectedStatus),
-                                                boxShadow: `0 0 8px ${getStatusColor(selectedStatus)}50`,
-                                                animation: selectedStatus === 'critical' ? 'pulse 1s infinite' : 'none'
-                                            }}
-                                        />
-                                        <span className="fw-medium" style={{ color: 'var(--text-primary)' }}>{selectedPatient.name}</span>
-                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>• {selectedPatient.ambulance}</span>
-                                    </>
-                                )}
-                            </div>
-                            <span style={{ transition: 'transform 0.2s', transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', color: 'var(--text-secondary)' }}>
-                                ▼
-                            </span>
-                        </div>
+                            {filteredPatients.map((patient) => {
+                                const pData = allPatientsData?.[patient.id];
+                                const pStatus = pData?.status || 'normal';
+                                const pVitals = pData?.vitals || {};
+                                const isSelected = patient.id === selectedPatientId;
 
-                        {/* Dropdown Menu */}
-                        {isDropdownOpen && (
-                            <div
-                                className="dropdown-menu-custom position-absolute w-100 mt-1 rounded"
-                                style={{
-                                    backgroundColor: 'var(--bg-card, #1a2332)',
-                                    border: '1px solid var(--border-color)',
-                                    zIndex: 1000,
-                                    boxShadow: '0 10px 40px var(--shadow-color)',
-                                    animation: 'slideDown 0.2s ease',
-                                    maxHeight: '350px',
-                                    overflowY: 'auto',
-                                    overflowX: 'hidden'
-                                }}
-                            >
-                                {patients.map(patient => {
-                                    const pData = allPatientsData[patient.id];
-                                    const pStatus = pData?.status || 'normal';
-                                    const pVitals = pData?.vitals || {};
-                                    const isSelected = patient.id === selectedPatientId;
-
-                                    return (
-                                        <div
-                                            key={patient.id}
-                                            className="dropdown-item-custom d-flex align-items-center gap-3 p-3"
-                                            onClick={() => { onSelectPatient(patient.id); setIsDropdownOpen(false); }}
-                                            style={{
-                                                cursor: 'pointer',
-                                                backgroundColor: isSelected ? 'var(--accent-blue, rgba(59, 130, 246, 0.2))' : 'transparent',
-                                                borderBottom: '1px solid var(--border-color)',
-                                                transition: 'background-color 0.15s'
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = isSelected ? 'var(--accent-blue, rgba(59, 130, 246, 0.2))' : 'transparent'}
-                                        >
-                                            {/* Condition Icon */}
-                                            <span style={{ fontSize: '1.5rem' }}>{getConditionIcon(patient.condition)}</span>
-
-                                            {/* Status Dot */}
-                                            <div
-                                                style={{
-                                                    width: '12px',
-                                                    height: '12px',
-                                                    borderRadius: '50%',
-                                                    backgroundColor: getStatusColor(pStatus),
-                                                    boxShadow: `0 0 8px ${getStatusColor(pStatus)}50`,
-                                                    animation: pStatus === 'critical' ? 'pulse 1s infinite' : 'none',
-                                                    flexShrink: 0
-                                                }}
-                                            />
-
-                                            {/* Patient Info */}
-                                            <div className="flex-grow-1">
-                                                <div className="d-flex justify-content-between align-items-center">
-                                                    <span className="fw-medium" style={{ color: 'var(--text-primary)' }}>{patient.name}</span>
-                                                    <span className="badge" style={{
+                                return (
+                                    <button
+                                        key={patient.id}
+                                        type="button"
+                                        onClick={() => onSelectPatient?.(patient.id)}
+                                        className="w-100 text-start"
+                                        style={{
+                                            background: isSelected ? 'var(--bg-card-hover)' : 'transparent',
+                                            border: 'none',
+                                            borderBottom: '1px solid var(--border-color)',
+                                            padding: '10px 12px',
+                                            color: 'var(--text-primary)',
+                                            boxShadow: isSelected ? 'inset 3px 0 0 var(--accent-blue)' : 'none',
+                                        }}
+                                    >
+                                        <div className="d-flex align-items-center justify-content-between" style={{ gap: '10px' }}>
+                                            <div className="d-flex align-items-center" style={{ gap: '10px', minWidth: 0 }}>
+                                                <span style={{ fontSize: '1.2rem' }}>{getConditionIcon(patient.condition)}</span>
+                                                <span
+                                                    style={{
+                                                        width: '10px',
+                                                        height: '10px',
+                                                        borderRadius: '50%',
                                                         backgroundColor: getStatusColor(pStatus),
-                                                        fontSize: '0.65rem',
-                                                        color: '#fff'
-                                                    }}>
-                                                        {pStatus.toUpperCase()}
-                                                    </span>
-                                                </div>
-                                                <div className="d-flex gap-3 mt-1">
-                                                    <small style={{ color: 'var(--text-muted)' }}>🚑 {patient.ambulance}</small>
-                                                    <small style={{ color: 'var(--text-muted)' }}>📍 {patient.location}</small>
-                                                </div>
-                                                <div className="d-flex gap-3 mt-1">
-                                                    <small style={{ color: pVitals.heartRate > 120 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>❤️ {pVitals.heartRate || '--'}</small>
-                                                    <small style={{ color: pVitals.spo2 < 90 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>🫁 {pVitals.spo2 || '--'}%</small>
-                                                    <small style={{ color: pVitals.temperature > 38.5 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>🌡️ {pVitals.temperature?.toFixed(1) || '--'}°</small>
+                                                        boxShadow: `0 0 10px ${getStatusColor(pStatus)}40`,
+                                                        flex: '0 0 auto',
+                                                    }}
+                                                />
+                                                <div className="text-truncate" style={{ minWidth: 0 }}>
+                                                    <div className="fw-semibold text-truncate">{patient.name}</div>
+                                                    <div className="small text-truncate" style={{ color: 'var(--text-muted)' }}>
+                                                        {patient.id} • {patient.ambulance}
+                                                    </div>
                                                 </div>
                                             </div>
+
+                                            <div className="d-flex" style={{ gap: '10px', flex: '0 0 auto', color: 'var(--text-secondary)' }}>
+                                                <small style={{ color: pVitals.heartRate > 120 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>❤️ {pVitals.heartRate ?? '--'}</small>
+                                                <small style={{ color: pVitals.spo2 < 90 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>🫁 {pVitals.spo2 ?? '--'}%</small>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                    </button>
+                                );
+                            })}
+
+                            {filteredPatients.length === 0 && (
+                                <div className="p-3" style={{ color: 'var(--text-muted)' }}>No matches.</div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
-                {/* Selected Patient Details Card */}
-                {selectedPatient && (
-                    <div
-                        className="selected-patient-card p-3 rounded"
-                        style={{
-                            backgroundColor: getStatusBg(selectedStatus),
-                            border: `2px solid ${getStatusColor(selectedStatus)}`,
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                            {/* Patient Info */}
-                            <div className="patient-info">
-                                <div className="d-flex align-items-center gap-2 mb-2">
-                                    <span style={{ fontSize: '1.5rem' }}>{getConditionIcon(selectedPatient.condition)}</span>
-                                    <div>
-                                        <h5 className="mb-0 fw-bold" style={{ color: 'var(--text-primary)' }}>{selectedPatient.name}</h5>
-                                        <span className="badge" style={{ fontSize: '0.7rem', backgroundColor: 'var(--accent-blue)', color: '#fff' }}>{t('monitoring').toUpperCase()}</span>
-                                    </div>
-                                </div>
-                                <div className="small mb-2" style={{ color: 'var(--text-muted)' }}>
-                                    <div className="mb-1">🚑 <strong style={{ color: 'var(--text-secondary)' }}>{selectedPatient.ambulance}</strong></div>
-                                    <div>📍 {selectedPatient.location}</div>
-                                </div>
-                                <span className="badge" style={{
-                                    backgroundColor: getStatusBg(selectedStatus),
-                                    color: getStatusColor(selectedStatus),
-                                    fontSize: '0.75rem',
-                                    border: `1px solid ${getStatusColor(selectedStatus)}`
-                                }}>
-                                    {selectedPatient.condition}
-                                </span>
-                            </div>
-
-                            {/* Status Badge */}
-                            <div className="text-end">
-                                <span className="badge" style={{
-                                    backgroundColor: getStatusColor(selectedStatus),
-                                    fontSize: '0.8rem',
-                                    padding: '8px 12px',
-                                    color: '#fff'
-                                }}>
-                                    {selectedStatus.toUpperCase()}
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Vitals Summary */}
-                        {selectedData && (
-                            <div className="vitals-summary pt-3 border-top" style={{ borderColor: 'var(--border-color) !important' }}>
-                                <div className="row g-2">
-                                    <div className="col-4">
-                                        <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
-                                            <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('heartRate')}</span>
-                                            <span className="d-block fw-bold" style={{
-                                                color: selectedVitals.heartRate > 120 ? 'var(--status-critical)' : selectedVitals.heartRate > 100 ? 'var(--status-warning)' : 'var(--status-normal)',
-                                                fontSize: '1.2rem'
-                                            }}>
-                                                {selectedVitals.heartRate || '--'} <small style={{ color: 'var(--text-muted)' }}>{t('bpm')}</small>
-                                            </span>
+                {/* Selected patient details */}
+                <div className="lg:col-span-2" style={{ minWidth: 0 }}>
+                    {selectedPatient ? (
+                        <div
+                            className="p-3 rounded"
+                            style={{
+                                backgroundColor: getStatusBg(selectedStatus),
+                                border: `1px solid ${getStatusColor(selectedStatus)}`,
+                                boxShadow: '0 10px 30px var(--shadow-color)',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <div className="d-flex justify-content-between align-items-start" style={{ gap: '12px' }}>
+                                <div style={{ minWidth: 0 }}>
+                                    <div className="d-flex align-items-center" style={{ gap: '10px' }}>
+                                        <span style={{ fontSize: '1.6rem' }}>{getConditionIcon(selectedPatient.condition)}</span>
+                                        <div style={{ minWidth: 0 }}>
+                                            <div className="fw-bold text-truncate" style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>
+                                                {selectedPatient.name}
+                                            </div>
+                                            <div className="small text-truncate" style={{ color: 'var(--text-muted)' }}>
+                                                {selectedPatient.id} • {selectedPatient.ambulance}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="col-4">
-                                        <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
-                                            <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('spo2')}</span>
-                                            <span className="d-block fw-bold" style={{
-                                                color: selectedVitals.spo2 < 90 ? 'var(--status-critical)' : selectedVitals.spo2 < 95 ? 'var(--status-warning)' : 'var(--status-normal)',
-                                                fontSize: '1.2rem'
-                                            }}>
-                                                {selectedVitals.spo2 || '--'}<small style={{ color: 'var(--text-muted)' }}>%</small>
-                                            </span>
-                                        </div>
+
+                                    <div className="small mt-2 text-truncate" style={{ color: 'var(--text-muted)' }}>
+                                        📍 {selectedPatient.location}
                                     </div>
-                                    <div className="col-4">
-                                        <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
-                                            <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('temperature')}</span>
-                                            <span className="d-block fw-bold" style={{
-                                                color: selectedVitals.temperature > 38.5 ? 'var(--status-critical)' : selectedVitals.temperature > 37.5 ? 'var(--status-warning)' : 'var(--status-normal)',
-                                                fontSize: '1.2rem'
-                                            }}>
-                                                {selectedVitals.temperature?.toFixed(1) || '--'}<small style={{ color: 'var(--text-muted)' }}>{t('celsius')}</small>
-                                            </span>
+                                    <div className="mt-2 d-flex" style={{ gap: '8px', flexWrap: 'wrap' }}>
+                                        <span className="badge" style={{ background: 'var(--accent-blue)', color: '#fff' }}>{t('monitoring')}</span>
+                                        <span className="badge" style={{ backgroundColor: 'transparent', border: `1px solid ${getStatusColor(selectedStatus)}`, color: getStatusColor(selectedStatus) }}>
+                                            {selectedPatient.condition}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="text-end" style={{ flex: '0 0 auto' }}>
+                                    <span className="badge" style={{ backgroundColor: getStatusColor(selectedStatus), color: '#fff' }}>
+                                        {selectedStatus.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Vitals Summary */}
+                            {selectedData && (
+                                <div className="vitals-summary pt-3 border-top" style={{ borderColor: 'var(--border-color) !important' }}>
+                                    <div className="row g-2">
+                                        <div className="col-4">
+                                            <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
+                                                <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('heartRate')}</span>
+                                                <span className="d-block fw-bold" style={{
+                                                    color: selectedVitals.heartRate > 120 ? 'var(--status-critical)' : selectedVitals.heartRate > 100 ? 'var(--status-warning)' : 'var(--status-normal)',
+                                                    fontSize: '1.2rem'
+                                                }}>
+                                                    {selectedVitals.heartRate || '--'} <small style={{ color: 'var(--text-muted)' }}>{t('bpm')}</small>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="col-4">
+                                            <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
+                                                <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('spo2')}</span>
+                                                <span className="d-block fw-bold" style={{
+                                                    color: selectedVitals.spo2 < 90 ? 'var(--status-critical)' : selectedVitals.spo2 < 95 ? 'var(--status-warning)' : 'var(--status-normal)',
+                                                    fontSize: '1.2rem'
+                                                }}>
+                                                    {selectedVitals.spo2 || '--'}<small style={{ color: 'var(--text-muted)' }}>%</small>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="col-4">
+                                            <div className="vital-box text-center p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
+                                                <span className="d-block small" style={{ color: 'var(--text-muted)' }}>{t('temperature')}</span>
+                                                <span className="d-block fw-bold" style={{
+                                                    color: selectedVitals.temperature > 38.5 ? 'var(--status-critical)' : selectedVitals.temperature > 37.5 ? 'var(--status-warning)' : 'var(--status-normal)',
+                                                    fontSize: '1.2rem'
+                                                }}>
+                                                    {selectedVitals.temperature?.toFixed(1) || '--'}<small style={{ color: 'var(--text-muted)' }}>{t('celsius')}</small>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-3 rounded" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                            <div style={{ color: 'var(--text-muted)' }}>No patient selected.</div>
+                        </div>
+                    )}
 
-                {/* Network Stats */}
-                <div className="network-summary mt-3 p-2 rounded" style={{ backgroundColor: 'var(--bg-input)' }}>
-                    <div className="d-flex justify-content-around text-center">
-                        <div>
-                            <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('totalNodes')}</small>
-                            <span className="fw-bold" style={{ color: 'var(--accent-cyan)' }}>{patients.length}</span>
-                        </div>
-                        <div>
-                            <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('dataStreams')}</small>
-                            <span className="fw-bold" style={{ color: 'var(--status-normal)' }}>{patients.length * 3}</span>
-                        </div>
-                        <div>
-                            <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('iotNetwork')}</small>
-                            <span className="fw-bold" style={{ color: 'var(--accent-blue)' }}>{t('active')}</span>
+                    {/* Network Stats */}
+                    <div className="mt-3 p-2 rounded" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
+                        <div className="d-flex justify-content-around text-center">
+                            <div>
+                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('totalNodes')}</small>
+                                <span className="fw-bold" style={{ color: 'var(--accent-cyan)' }}>{(patients || []).length}</span>
+                            </div>
+                            <div>
+                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('dataStreams')}</small>
+                                <span className="fw-bold" style={{ color: 'var(--status-normal)' }}>{(patients || []).length * 3}</span>
+                            </div>
+                            <div>
+                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('iotNetwork')}</small>
+                                <span className="fw-bold" style={{ color: 'var(--accent-blue)' }}>{t('active')}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <style>{`
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; transform: scale(1); }
-                    50% { opacity: 0.5; transform: scale(1.2); }
-                }
-                @keyframes slideDown {
-                    from { opacity: 0; transform: translateY(-10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .dropdown-trigger:hover {
-                    background-color: var(--bg-card-hover) !important;
-                }
-                .patient-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 4px 12px var(--shadow-color);
-                }
-                .dropdown-menu-custom::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .dropdown-menu-custom::-webkit-scrollbar-track {
-                    background: var(--bg-input);
-                }
-                .dropdown-menu-custom::-webkit-scrollbar-thumb {
-                    background: var(--border-color);
-                    border-radius: 3px;
-                }
-                .dropdown-menu-custom::-webkit-scrollbar-thumb:hover {
-                    background: var(--text-muted);
+                .multi-patient-card button:hover {
+                    background: var(--bg-card-hover) !important;
                 }
             `}</style>
-        </div>
+        </DashboardCard>
     );
 }
 

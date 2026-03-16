@@ -120,6 +120,8 @@ function Navbar({
         setLangSearch('');
     };
 
+    const selectedPatientDot = selectedPatientId ? getPatientStatusDot(selectedPatientId) : '👤';
+
     return (
         <nav className="top-navbar">
             <div className="navbar-left">
@@ -151,18 +153,40 @@ function Navbar({
             <div className="navbar-right">
                 {/* Patient Selector Dropdown */}
                 {simulatorOn && patients && patients.length > 0 && (
-                    <div className="patient-selector me-2">
-                        <select
-                            className="form-select form-select-sm patient-dropdown ll-control"
-                            value={selectedPatientId}
-                            onChange={(e) => onSelectPatient(e.target.value)}
-                        >
-                            {patients.map(patient => (
-                                <option key={patient.id} value={patient.id}>
-                                    {getPatientStatusDot(patient.id)} {patient.name} ({patient.ambulance})
-                                </option>
-                            ))}
-                        </select>
+                    <div className="patient-selector me-2 d-flex align-items-center" style={{ gap: '8px' }}>
+                        <span className="d-none d-md-inline" style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 700 }}>
+                            👤 Patient
+                        </span>
+                        <div className="position-relative">
+                            <span
+                                aria-hidden
+                                style={{
+                                    position: 'absolute',
+                                    left: '10px',
+                                    top: '50%',
+                                    transform: 'translateY(-50%)',
+                                    pointerEvents: 'none',
+                                    fontSize: '0.95rem'
+                                }}
+                            >
+                                {selectedPatientDot}
+                            </span>
+                            <select
+                                className="form-select form-select-sm patient-dropdown ll-control"
+                                value={selectedPatientId}
+                                onChange={(e) => onSelectPatient(e.target.value)}
+                                style={{
+                                    minWidth: '240px',
+                                    paddingLeft: '32px'
+                                }}
+                            >
+                                {patients.map(patient => (
+                                    <option key={patient.id} value={patient.id}>
+                                        {getPatientStatusDot(patient.id)} {patient.name} ({patient.ambulance})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 )}
 

@@ -58,6 +58,10 @@ function Dashboard({
     allPatientsData,
     selectedPatientId,
     onSelectPatient,
+    simulatorOn,
+    worsenState,
+    onTriggerWorsen,
+    onStopWorsen,
     userRole // New prop for RBAC
 }) {
     const vitals = patientData?.vitals || {};
@@ -121,7 +125,15 @@ function Dashboard({
 
                         {/* Secondary insights */}
                         <div className="sm:col-span-2 min-w-0">
-                            <PredictiveHealthCard vitals={vitals} history={history} />
+                            <PredictiveHealthCard
+                                vitals={vitals}
+                                history={history}
+                                patientId={selectedPatientId}
+                                simulatorOn={simulatorOn}
+                                worsenState={worsenState}
+                                onTriggerWorsen={onTriggerWorsen}
+                                onStopWorsen={onStopWorsen}
+                            />
                         </div>
                         <div className="sm:col-span-2 min-w-0">
                             <HospitalReadinessCard patientData={patientData} />

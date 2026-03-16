@@ -73,6 +73,13 @@ function App() {
   const [simulatorOn, setSimulatorOn] = useState(false);
   const simulatorRef = useRef(null);
 
+  // Worsen Situation (simulated deterioration) state - per patient
+  // - Effect lasts for 60s by default
+  // - Stop is allowed only after 30s minimum
+  const WORSEN_MIN_MS = 30_000;
+  const WORSEN_DURATION_MS = 60_000;
+  const [worsenByPatientId, setWorsenByPatientId] = useState({});
+
   // Connection state
   const [connected, setConnected] = useState(false);
 
@@ -273,6 +280,64 @@ function App() {
   const generateSimulatedVitals = useCallback((patient) => {
     return vitalsSimulator.generate(patient);
   }, [vitalsSimulator]);
+
+  const triggerWorsenSituation = useCallback((patientId) => {
+    const patient = patients.find((p) => p.id === patientId);
+    const now = Date.now();
+
+    setWorsenByPatientId((prev) => ({
+      ...prev,
+      [patientId]: {
+        startedAtMs: now,
+        minUntilMs: now + WORSEN_MIN_MS,
+        untilMs: now + WORSEN_DURATION_MS,
+      },
+    }));
+
+    // Apply to simulator (no-op if simulator isn't running yet)
+    vitalsSimulator.activateWorsen(patientId, WORSEN_DURATION_MS, patient?.condition);
+
+    addEvent('critical', `🧨 Worsen Situation triggered for ${patient?.name || patientId} (min 30s)`);
+  }, [patients, vitalsSimulator, addEvent]);
+
+  const stopWorsenSituation = useCallback((patientId) => {
+    const now = Date.now();
+    const state = worsenByPatientId?.[patientId];
+
+    if (state?.minUntilMs && now < state.minUntilMs) {
+      const remainingMs = Math.max(0, state.minUntilMs - now);
+      return { ok: false, remainingMs };
+    }
+
+    vitalsSimulator.stopWorsen(patientId);
+    setWorsenByPatientId((prev) => {
+      const next = { ...prev };
+      delete next[patientId];
+      return next;
+    });
+
+    addEvent('info', `✅ Worsen Situation stopped for ${patientId}`);
+    return { ok: true, remainingMs: 0 };
+  }, [worsenByPatientId, vitalsSimulator, addEvent]);
+
+  // Cleanup ended worsen windows (keeps state tidy)
+  useEffect(() => {
+    const id = setInterval(() => {
+      setWorsenByPatientId((prev) => {
+        const now = Date.now();
+        let changed = false;
+        const next = { ...prev };
+        for (const [pid, s] of Object.entries(prev)) {
+          if (s?.untilMs && now >= s.untilMs) {
+            changed = true;
+            delete next[pid];
+          }
+        }
+        return changed ? next : prev;
+      });
+    }, 1500);
+    return () => clearInterval(id);
+  }, []);
 
   // Toggle simulator
   const toggleSimulator = useCallback(() => {
@@ -561,6 +626,10 @@ function App() {
                         allPatientsData={allPatientsData}
                         selectedPatientId={selectedPatientId}
                         onSelectPatient={selectPatient}
+                        simulatorOn={simulatorOn}
+                        worsenState={worsenByPatientId[selectedPatientId] || null}
+                        onTriggerWorsen={triggerWorsenSituation}
+                        onStopWorsen={stopWorsenSituation}
                         userRole={user?.role}
                       />
                     }
