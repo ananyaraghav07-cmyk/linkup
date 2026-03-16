@@ -75,9 +75,9 @@ function NetworkQoSCard({ connected, latency }) {
     }, [latency]);
 
     const getQoSColor = (score) => {
-        if (score >= 80) return '#10b981';
-        if (score >= 50) return '#f59e0b';
-        return '#ef4444';
+        if (score >= 80) return 'var(--status-normal)';
+        if (score >= 50) return 'var(--status-warning)';
+        return 'var(--status-critical)';
     };
 
     const getSignalBars = (strength) => {
@@ -107,7 +107,7 @@ function NetworkQoSCard({ connected, latency }) {
                 <div className="text-center mb-3">
                     <div className="qos-score d-inline-block position-relative">
                         <svg width="120" height="120" viewBox="0 0 120 120">
-                            <circle cx="60" cy="60" r="50" fill="none" stroke="#1e2430" strokeWidth="10" />
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg-input)" strokeWidth="10" />
                             <circle
                                 cx="60" cy="60" r="50"
                                 fill="none"
@@ -137,7 +137,7 @@ function NetworkQoSCard({ connected, latency }) {
                                 style={{
                                     width: '8px',
                                     height: `${bar * 8}px`,
-                                    backgroundColor: bar <= signalBars ? '#10b981' : '#2d3748',
+                                    backgroundColor: bar <= signalBars ? 'var(--status-normal)' : 'var(--bg-input)',
                                     borderRadius: '2px',
                                     transition: 'background-color 0.3s'
                                 }}
@@ -150,7 +150,7 @@ function NetworkQoSCard({ connected, latency }) {
                 {/* Metrics Grid */}
                 <div className="row g-2 mb-3">
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Bandwidth</small>
                             <span className="fw-bold text-info">
                                 {qosMetrics.bandwidth.current.toFixed(1)} Mbps
@@ -158,7 +158,7 @@ function NetworkQoSCard({ connected, latency }) {
                         </div>
                     </div>
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Latency</small>
                             <span className={`fw-bold ${(latency || 0) < 50 ? 'text-success' : 'text-warning'}`}>
                                 {latency || 0} ms
@@ -166,7 +166,7 @@ function NetworkQoSCard({ connected, latency }) {
                         </div>
                     </div>
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Packet Loss</small>
                             <span className={`fw-bold ${qosMetrics.packetLoss < 1 ? 'text-success' : 'text-warning'}`}>
                                 {qosMetrics.packetLoss.toFixed(2)}%
@@ -174,7 +174,7 @@ function NetworkQoSCard({ connected, latency }) {
                         </div>
                     </div>
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Jitter</small>
                             <span className={`fw-bold ${qosMetrics.jitter < 15 ? 'text-success' : 'text-warning'}`}>
                                 {qosMetrics.jitter.toFixed(1)} ms
@@ -184,11 +184,11 @@ function NetworkQoSCard({ connected, latency }) {
                 </div>
 
                 {/* Adaptive Mode */}
-                <div className="adaptive-mode mb-3 p-2 bg-dark rounded">
+                <div className="adaptive-mode mb-3 p-2 rounded" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                     <div className="d-flex justify-content-between align-items-center">
                         <span className="small">Adaptive Mode:</span>
                         <span className={`badge ${qosMetrics.adaptiveMode === 'high-quality' ? 'bg-success' :
-                                qosMetrics.adaptiveMode === 'balanced' ? 'bg-warning text-dark' : 'bg-danger'
+                            qosMetrics.adaptiveMode === 'balanced' ? 'bg-warning text-dark' : 'bg-danger'
                             }`}>
                             {qosMetrics.adaptiveMode.toUpperCase()}
                         </span>

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles.css';
@@ -32,6 +32,9 @@ import Login from './pages/Login';
 // API Configuration
 import { API_BASE_URL } from './config/api';
 
+// Health simulation engine (extracted from this file)
+import { createVitalsSimulator } from './features/health/simulation';
+
 function App() {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,6 +43,15 @@ function App() {
 
   // UI state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Desktop sidebar collapse (icon-only rail)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('lifelink-sidebar-collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
 
   // Notifications (shared between header + mobile drawer)
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -126,9 +138,15 @@ function App() {
   const [allPatientsData, setAllPatientsData] = useState({});
   const [allPatientsHistory, setAllPatientsHistory] = useState({});
 
-  // Current patient data (derived from selected)
-  const patientData = allPatientsData[selectedPatientId] || null;
-  const history = allPatientsHistory[selectedPatientId] || null;
+  // Socket-backed single patient fallback (used when simulator is OFF)
+  const [socketPatientData, setSocketPatientData] = useState(null);
+  const [socketHistory, setSocketHistory] = useState(null);
+
+  // Current patient data (derived from selected) + safe socket fallback
+  const simulatedPatientData = allPatientsData[selectedPatientId] || null;
+  const simulatedHistory = allPatientsHistory[selectedPatientId] || null;
+  const patientData = simulatorOn ? simulatedPatientData : socketPatientData;
+  const history = simulatorOn ? simulatedHistory : socketHistory;
 
   // Network stats
   const [latency, setLatency] = useState(0);
@@ -144,6 +162,18 @@ function App() {
 
   // Toggle sidebar
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const toggleSidebarCollapsed = useCallback(() => {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('lifelink-sidebar-collapsed', next ? '1' : '0');
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }, []);
 
   const markNotificationAsRead = (id) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
@@ -238,142 +268,11 @@ function App() {
 
   // ==================== REALISTIC VITALS SIMULATOR ====================
 
-  // Use ref to track vital states (avoids stale closure issues)
-  const patientVitalStatesRef = useRef({});
-
-  // Medical scenarios - mostly stable with occasional mild changes
-  const scenariosRef = useRef({
-    'Cardiac': [
-      { name: 'Stable', duration: 45, targets: { hr: 76, spo2: 97, temp: 36.7 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-      { name: 'Slight Elevation', duration: 20, targets: { hr: 88, spo2: 96, temp: 36.9 }, variability: { hr: 3, spo2: 0.5, temp: 0.05 } },
-      { name: 'Mild Stress', duration: 15, targets: { hr: 98, spo2: 95, temp: 37.0 }, variability: { hr: 3, spo2: 1, temp: 0.1 } },
-      { name: 'Recovery', duration: 30, targets: { hr: 80, spo2: 97, temp: 36.8 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-    ],
-    'Trauma': [
-      { name: 'Stable', duration: 45, targets: { hr: 80, spo2: 97, temp: 36.6 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-      { name: 'Pain Response', duration: 18, targets: { hr: 92, spo2: 96, temp: 36.8 }, variability: { hr: 3, spo2: 0.5, temp: 0.05 } },
-      { name: 'Elevated', duration: 12, targets: { hr: 105, spo2: 94, temp: 37.0 }, variability: { hr: 4, spo2: 1, temp: 0.1 } },
-      { name: 'Stabilizing', duration: 35, targets: { hr: 82, spo2: 97, temp: 36.7 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-    ],
-    'Respiratory': [
-      { name: 'Stable', duration: 40, targets: { hr: 74, spo2: 96, temp: 36.8 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-      { name: 'Slight Distress', duration: 20, targets: { hr: 82, spo2: 94, temp: 37.0 }, variability: { hr: 3, spo2: 1, temp: 0.05 } },
-      { name: 'Mild Hypoxia', duration: 15, targets: { hr: 92, spo2: 91, temp: 37.1 }, variability: { hr: 3, spo2: 1, temp: 0.1 } },
-      { name: 'Improving', duration: 35, targets: { hr: 76, spo2: 96, temp: 36.9 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-    ],
-    'Stroke': [
-      { name: 'Stable', duration: 45, targets: { hr: 72, spo2: 97, temp: 36.7 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-      { name: 'Slight Change', duration: 20, targets: { hr: 82, spo2: 96, temp: 36.9 }, variability: { hr: 3, spo2: 0.5, temp: 0.05 } },
-      { name: 'Elevated', duration: 15, targets: { hr: 95, spo2: 94, temp: 37.2 }, variability: { hr: 4, spo2: 1, temp: 0.1 } },
-      { name: 'Monitoring', duration: 35, targets: { hr: 75, spo2: 97, temp: 36.8 }, variability: { hr: 2, spo2: 0.5, temp: 0.05 } },
-    ]
-  });
-
-  // Smooth interpolation
-  const lerp = (current, target, speed) => current + (target - current) * speed;
-
-  // Very subtle natural variability (like real monitors)
-  const addNaturalVariability = useCallback((value, range, seed) => {
-    const time = Date.now() / 1000;
-    // Slower sine wave for gentle oscillation
-    const sineVar = Math.sin(time * 0.15 + seed) * (range * 0.5);
-    // Very small random component
-    const randomVar = (Math.random() - 0.5) * range * 0.3;
-    return value + sineVar + randomVar;
-  }, []);
-
-  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+  const vitalsSimulator = useMemo(() => createVitalsSimulator(), []);
 
   const generateSimulatedVitals = useCallback((patient) => {
-    const condition = patient.condition || 'Cardiac';
-    const scenarios = scenariosRef.current[condition] || scenariosRef.current['Cardiac'];
-    const patientSeed = patient.id.charCodeAt(patient.id.length - 1);
-
-    // Get or initialize patient state from ref
-    if (!patientVitalStatesRef.current[patient.id]) {
-      patientVitalStatesRef.current[patient.id] = {
-        currentHR: scenarios[0].targets.hr,
-        currentSpo2: scenarios[0].targets.spo2,
-        currentTemp: scenarios[0].targets.temp,
-        scenarioIndex: 0,
-        scenarioTimer: 0
-      };
-    }
-
-    const state = patientVitalStatesRef.current[patient.id];
-    const currentScenario = scenarios[state.scenarioIndex];
-
-    // Update scenario timer
-    state.scenarioTimer++;
-
-    // Check if need to switch scenario (80% stay stable, 20% change)
-    if (state.scenarioTimer >= currentScenario.duration) {
-      state.scenarioTimer = 0;
-      if (Math.random() < 0.8) {
-        // Stay in stable or recovery
-        state.scenarioIndex = Math.random() < 0.7 ? 0 : scenarios.length - 1;
-      } else {
-        // Move to next scenario in sequence
-        state.scenarioIndex = (state.scenarioIndex + 1) % scenarios.length;
-      }
-    }
-
-    const scenario = scenarios[state.scenarioIndex];
-
-    // Very smooth interpolation (slow changes)
-    state.currentHR = lerp(state.currentHR, scenario.targets.hr, 0.03);
-    state.currentSpo2 = lerp(state.currentSpo2, scenario.targets.spo2, 0.02);
-    state.currentTemp = lerp(state.currentTemp, scenario.targets.temp, 0.01);
-
-    // Add subtle natural variability
-    const heartRate = Math.round(clamp(
-      addNaturalVariability(state.currentHR, scenario.variability.hr, patientSeed),
-      50, 160
-    ));
-
-    const spo2 = Math.round(clamp(
-      addNaturalVariability(state.currentSpo2, scenario.variability.spo2, patientSeed + 10),
-      85, 100
-    ));
-
-    const temperature = Math.round(clamp(
-      addNaturalVariability(state.currentTemp, scenario.variability.temp, patientSeed + 20),
-      35.5, 40.0
-    ) * 10) / 10;
-
-    // Determine status based on vitals
-    let status = 'normal';
-    let alerts = [];
-
-    if (heartRate > 120 || spo2 < 90 || temperature > 38.5) {
-      status = 'critical';
-      if (heartRate > 120) alerts.push('Tachycardia');
-      if (spo2 < 90) alerts.push('Hypoxemia');
-      if (temperature > 38.5) alerts.push('High Fever');
-    } else if (heartRate > 100 || spo2 < 94 || temperature > 37.8) {
-      status = 'warning';
-      if (heartRate > 100) alerts.push('Elevated HR');
-      if (spo2 < 94) alerts.push('Low SpO2');
-      if (temperature > 37.8) alerts.push('Fever');
-    }
-
-    return {
-      patientId: patient.id,
-      patientName: patient.name,
-      ambulance: patient.ambulance,
-      location: patient.location,
-      condition: patient.condition,
-      scenario: scenario.name,
-      vitals: {
-        heartRate,
-        spo2,
-        temperature
-      },
-      status,
-      alerts,
-      timestamp: new Date().toISOString()
-    };
-  }, [addNaturalVariability]);
+    return vitalsSimulator.generate(patient);
+  }, [vitalsSimulator]);
 
   // Toggle simulator
   const toggleSimulator = useCallback(() => {
@@ -527,16 +426,19 @@ function App() {
     socket.on('initial-data', (data) => {
       console.log('📦 Initial data received:', data);
       if (data.patients && data.patients.length > 0) {
-        setPatientData(data.patients[0]);
-        setHistory(data.history[data.patients[0].patientId]);
+        setSocketPatientData(data.patients[0]);
+
+        const firstId = data.patients[0].patientId;
+        const initialHistory = data.history?.[firstId] ?? data.history ?? null;
+        setSocketHistory(initialHistory);
         addEvent('info', 'Received initial patient data');
       }
     });
 
     // Real-time vitals update
     socket.on('vitals-update', (data) => {
-      setPatientData(data.patient);
-      setHistory(data.history);
+      setSocketPatientData(data.patient);
+      setSocketHistory(data.history);
       setLastUpdate(new Date().toLocaleTimeString());
       setPacketCount(prev => prev + 1);
 
@@ -607,6 +509,8 @@ function App() {
           <Sidebar
             isOpen={sidebarOpen}
             onToggle={toggleSidebar}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={toggleSidebarCollapsed}
             patientData={patientData}
             userRole={user?.role}
             theme={theme}
@@ -617,7 +521,7 @@ function App() {
           />
 
           {/* Main Content Area */}
-          <div className={`main-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
+          <div className={`main-wrapper ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
             {/* Top Navbar */}
             <Navbar
               connected={connected}

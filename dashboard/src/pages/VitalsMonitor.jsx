@@ -18,6 +18,7 @@ import {
     Legend,
     Filler
 } from 'chart.js';
+import { buildLineChartOptions, useChartTheme, withAlpha } from '../utils/chartTheme';
 
 ChartJS.register(
     CategoryScale,
@@ -32,6 +33,7 @@ ChartJS.register(
 );
 
 function VitalsMonitor({ patientData, history }) {
+    const chartTheme = useChartTheme();
     const vitals = patientData?.vitals || {};
     const status = patientData?.status || 'normal';
 
@@ -41,8 +43,8 @@ function VitalsMonitor({ patientData, history }) {
         datasets: [{
             label: 'Heart Rate (BPM)',
             data: history?.heartRate?.slice(-60) || [],
-            borderColor: '#ff6b6b',
-            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+            borderColor: chartTheme.heart,
+            backgroundColor: withAlpha(chartTheme.heart, 0.14),
             borderWidth: 2,
             fill: true,
             tension: 0.4,
@@ -56,8 +58,8 @@ function VitalsMonitor({ patientData, history }) {
         datasets: [{
             label: 'SpO2 (%)',
             data: history?.spo2?.slice(-60) || [],
-            borderColor: '#4ecdc4',
-            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+            borderColor: chartTheme.spo2,
+            backgroundColor: withAlpha(chartTheme.spo2, 0.14),
             borderWidth: 2,
             fill: true,
             tension: 0.4,
@@ -71,8 +73,8 @@ function VitalsMonitor({ patientData, history }) {
         datasets: [{
             label: 'Temperature (°C)',
             data: history?.temperature?.slice(-60) || [],
-            borderColor: '#ffd93d',
-            backgroundColor: 'rgba(255, 217, 61, 0.1)',
+            borderColor: chartTheme.temp,
+            backgroundColor: withAlpha(chartTheme.temp, 0.14),
             borderWidth: 2,
             fill: true,
             tension: 0.4,
@@ -80,31 +82,7 @@ function VitalsMonitor({ patientData, history }) {
         }]
     };
 
-    const chartOptions = (min, max) => ({
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: true, position: 'top', labels: { color: '#8b949e' } },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-            }
-        },
-        scales: {
-            x: {
-                display: true,
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#8b949e', maxTicksLimit: 10 }
-            },
-            y: {
-                min, max,
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#8b949e' }
-            }
-        },
-        animation: { duration: 300 }
-    });
+    const chartOptions = (min, max) => buildLineChartOptions(chartTheme, { min, max, showLegend: true });
 
     const getStatusColor = (value, type) => {
         if (type === 'heartRate') {
@@ -215,7 +193,7 @@ function VitalsMonitor({ patientData, history }) {
                             <div className="card-body">
                                 <h5 className="card-title">📊 Session Statistics</h5>
                                 <div className="table-responsive">
-                                    <table className="table table-dark table-hover">
+                                    <table className="table table-hover ll-table">
                                         <thead>
                                             <tr>
                                                 <th>Vital Sign</th>

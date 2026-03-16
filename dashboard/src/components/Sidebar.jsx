@@ -31,6 +31,8 @@ const LANGUAGES = [
 function Sidebar({
     isOpen,
     onToggle,
+    collapsed = false,
+    onToggleCollapse,
     patientData,
     userRole,
     theme,
@@ -40,6 +42,8 @@ function Sidebar({
     onOpenNotifications,
 }) {
     const { t, language, changeLanguage } = useLanguage();
+
+    const collapseOnDesktop = collapsed && typeof window !== 'undefined' && window.innerWidth >= 992;
 
     // All menu items - will be filtered based on role
     const allMenuItems = [
@@ -100,19 +104,33 @@ function Sidebar({
             )}
 
             {/* Sidebar */}
-            <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+            <aside className={`sidebar ${isOpen ? 'open' : ''} ${collapseOnDesktop ? 'collapsed' : ''}`}>
                 {/* Sidebar Header */}
                 <div className="sidebar-header">
                     <div className="sidebar-brand">
                         <span className="brand-icon">🏥</span>
                         <span className="brand-text">{t('lifelinkTwin')}</span>
                     </div>
-                    <button
-                        className="sidebar-close d-lg-none"
-                        onClick={onToggle}
-                    >
-                        ✕
-                    </button>
+
+                    <div className="d-flex align-items-center" style={{ gap: '8px' }}>
+                        {/* Desktop collapse toggle */}
+                        <button
+                            type="button"
+                            className="sidebar-collapse-btn d-none d-lg-inline-flex"
+                            onClick={onToggleCollapse}
+                            aria-label={collapseOnDesktop ? 'Expand sidebar' : 'Collapse sidebar'}
+                            title={collapseOnDesktop ? 'Expand sidebar' : 'Collapse sidebar'}
+                        >
+                            {collapseOnDesktop ? '➡︎' : '⬅︎'}
+                        </button>
+
+                        <button
+                            className="sidebar-close d-lg-none"
+                            onClick={onToggle}
+                        >
+                            ✕
+                        </button>
+                    </div>
                 </div>
 
                 {/* Mobile control panel (required: theme, language, notifications, system toggle) */}
@@ -178,7 +196,7 @@ function Sidebar({
                             <span>👤</span>
                         </div>
                         <div className="patient-details">
-                            <span className="patient-name-sm">{patientData?.patientName || 'John Doe'}</span>
+                            <span className="patient-name-sm">{patientData?.patientName || 'Krishu Jha'}</span>
                             <span className="patient-id-sm">ID: {patientData?.patientId || 'patient1'}</span>
                         </div>
                         <span className={`status-indicator-sm ${patientData?.status === 'critical' ? 'critical' : patientData?.status === 'warning' ? 'warning' : 'online'}`}></span>
@@ -213,6 +231,7 @@ function Sidebar({
                                         to={item.path}
                                         className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                                         onClick={() => window.innerWidth < 992 && onToggle()}
+                                        title={collapseOnDesktop ? t(item.labelKey) : undefined}
                                     >
                                         <span className="nav-icon">{item.icon}</span>
                                         <span className="nav-label">{t(item.labelKey)}</span>

@@ -93,9 +93,9 @@ function PredictiveHealthCard({ vitals, history }) {
     }, [vitals, history]);
 
     const getRiskColor = (score) => {
-        if (score >= 70) return '#ef4444';
-        if (score >= 40) return '#f59e0b';
-        return '#10b981';
+        if (score >= 70) return 'var(--status-critical)';
+        if (score >= 40) return 'var(--status-warning)';
+        return 'var(--status-normal)';
     };
 
     const getTrendIcon = (trend) => {
@@ -163,7 +163,7 @@ function PredictiveHealthCard({ vitals, history }) {
                             <path
                                 d="M 20 90 A 60 60 0 0 1 140 90"
                                 fill="none"
-                                stroke="#1e2430"
+                                stroke="var(--bg-input)"
                                 strokeWidth="12"
                                 strokeLinecap="round"
                             />
@@ -192,7 +192,7 @@ function PredictiveHealthCard({ vitals, history }) {
                 {/* Trend & Time to Event */}
                 <div className="row g-2 mb-3">
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Trend</small>
                             <span className={`fw-bold ${getTrendClass(prediction.trend)}`}>
                                 {getTrendIcon(prediction.trend)} {prediction.trend.toUpperCase()}
@@ -200,7 +200,7 @@ function PredictiveHealthCard({ vitals, history }) {
                         </div>
                     </div>
                     <div className="col-6">
-                        <div className="bg-dark rounded p-2 text-center">
+                        <div className="rounded p-2 text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                             <small className="text-muted d-block">Time to Event</small>
                             <span className={`fw-bold ${prediction.timeToEvent ? 'text-warning' : 'text-success'}`}>
                                 {prediction.timeToEvent || 'N/A'}

@@ -104,10 +104,10 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'critical': return '#ef4444';
-            case 'warning': return '#f59e0b';
-            case 'elevated': return '#3b82f6';
-            default: return '#10b981';
+            case 'critical': return 'var(--status-critical)';
+            case 'warning': return 'var(--status-warning)';
+            case 'elevated': return 'var(--accent-secondary)';
+            default: return 'var(--status-normal)';
         }
     };
 
@@ -133,10 +133,10 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                     </div>
                     <div className="d-flex gap-2">
                         <select
-                            className="form-select form-select-sm"
+                            className="form-select form-select-sm ll-control"
                             value={viewMode}
                             onChange={(e) => setViewMode(e.target.value)}
-                            style={{ width: '120px', backgroundColor: '#1e2430', color: '#fff', border: '1px solid #374151' }}
+                            style={{ width: '120px' }}
                         >
                             <option value="full">Full Body</option>
                             <option value="cardiac">Cardiac</option>
@@ -164,7 +164,7 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                                 width: '64px',
                                 height: '64px',
                                 borderRadius: '50%',
-                                backgroundColor: '#0a0e17'
+                                backgroundColor: 'var(--bg-primary)'
                             }}
                         >
                             <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{overallHealth}%</span>
@@ -179,9 +179,9 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                     style={{
                         width: '200px',
                         height: '300px',
-                        background: 'linear-gradient(180deg, #1a2332 0%, #0d1320 100%)',
+                        background: 'linear-gradient(180deg, var(--bg-card) 0%, var(--bg-secondary) 100%)',
                         borderRadius: '12px',
-                        border: '1px solid #374151',
+                        border: '1px solid var(--border-color)',
                         overflow: 'hidden'
                     }}
                 >
@@ -193,27 +193,27 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                         {/* Grid lines for tech feel */}
                         <defs>
                             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#1e3a5f" strokeWidth="0.3" opacity="0.3" />
+                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="var(--border-color)" strokeWidth="0.3" opacity="0.35" />
                             </pattern>
                             <linearGradient id="bodyGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-                                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
+                                <stop offset="0%" stopColor="var(--accent-blue)" stopOpacity="0.22" />
+                                <stop offset="100%" stopColor="var(--accent-cyan)" stopOpacity="0.14" />
                             </linearGradient>
                         </defs>
                         <rect width="100" height="150" fill="url(#grid)" />
 
                         {/* Human silhouette */}
-                        <ellipse cx="50" cy="12" rx="12" ry="10" fill="url(#bodyGlow)" stroke="#3b82f6" strokeWidth="0.5" /> {/* Head */}
-                        <rect x="44" y="22" width="12" height="6" rx="2" fill="url(#bodyGlow)" stroke="#3b82f6" strokeWidth="0.5" /> {/* Neck */}
+                        <ellipse cx="50" cy="12" rx="12" ry="10" fill="url(#bodyGlow)" stroke="var(--accent-blue)" strokeWidth="0.5" /> {/* Head */}
+                        <rect x="44" y="22" width="12" height="6" rx="2" fill="url(#bodyGlow)" stroke="var(--accent-blue)" strokeWidth="0.5" /> {/* Neck */}
                         <path
                             d="M 35 28 Q 30 35 28 55 L 28 75 Q 30 80 35 82 L 35 110 Q 36 115 40 120 L 40 140 Q 42 145 45 145 L 55 145 Q 58 145 60 140 L 60 120 Q 64 115 65 110 L 65 82 Q 70 80 72 75 L 72 55 Q 70 35 65 28 Z"
                             fill="url(#bodyGlow)"
-                            stroke="#3b82f6"
+                            stroke="var(--accent-blue)"
                             strokeWidth="0.5"
                         />
                         {/* Arms */}
-                        <path d="M 28 30 Q 20 40 15 65 Q 14 70 18 70 Q 22 70 24 65 L 28 45" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
-                        <path d="M 72 30 Q 80 40 85 65 Q 86 70 82 70 Q 78 70 76 65 L 72 45" fill="none" stroke="#3b82f6" strokeWidth="0.5" />
+                        <path d="M 28 30 Q 20 40 15 65 Q 14 70 18 70 Q 22 70 24 65 L 28 45" fill="none" stroke="var(--accent-blue)" strokeWidth="0.5" />
+                        <path d="M 72 30 Q 80 40 85 65 Q 86 70 82 70 Q 78 70 76 65 L 72 45" fill="none" stroke="var(--accent-blue)" strokeWidth="0.5" />
 
                         {/* Pulse animation circles */}
                         <circle
@@ -264,17 +264,17 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
 
                     {/* Vital Overlays */}
                     <div className="vital-overlays position-absolute" style={{ top: '10px', right: '10px' }}>
-                        <div className="vital-mini-display p-1 rounded mb-1" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                        <div className="vital-mini-display p-1 rounded mb-1" style={{ backgroundColor: 'var(--bg-navbar)', border: '1px solid var(--border-color)' }}>
                             <small style={{ color: getStatusColor(organSystems.heart.status) }}>
                                 ❤️ {vitals?.heartRate || '--'}
                             </small>
                         </div>
-                        <div className="vital-mini-display p-1 rounded mb-1" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                        <div className="vital-mini-display p-1 rounded mb-1" style={{ backgroundColor: 'var(--bg-navbar)', border: '1px solid var(--border-color)' }}>
                             <small style={{ color: getStatusColor(organSystems.lungs.status) }}>
                                 🫁 {vitals?.spo2 || '--'}%
                             </small>
                         </div>
-                        <div className="vital-mini-display p-1 rounded" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+                        <div className="vital-mini-display p-1 rounded" style={{ backgroundColor: 'var(--bg-navbar)', border: '1px solid var(--border-color)' }}>
                             <small className="text-info">
                                 🌡️ {vitals?.temperature || '--'}°
                             </small>
@@ -287,7 +287,7 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                     <div
                         className="organ-details p-3 rounded mb-3"
                         style={{
-                            backgroundColor: 'rgba(0,0,0,0.4)',
+                            backgroundColor: 'var(--bg-input)',
                             border: `1px solid ${getStatusColor(organSystems[selectedOrgan].status)}`
                         }}
                     >
@@ -328,7 +328,8 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                                 <div
                                     className={`organ-card p-2 rounded text-center ${selectedOrgan === key ? 'border border-info' : ''}`}
                                     style={{
-                                        backgroundColor: '#1a2332',
+                                        backgroundColor: 'var(--bg-input)',
+                                        border: '1px solid var(--border-color)',
                                         cursor: 'pointer'
                                     }}
                                     onClick={() => setSelectedOrgan(key === selectedOrgan ? null : key)}
@@ -339,7 +340,7 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                                         style={{
                                             width: '80%',
                                             height: '4px',
-                                            backgroundColor: '#374151',
+                                            backgroundColor: 'var(--bg-secondary)',
                                             borderRadius: '2px',
                                             overflow: 'hidden'
                                         }}
@@ -363,7 +364,7 @@ function DigitalTwinVisualizationCard({ vitals, patientData }) {
                 </div>
 
                 {/* Patient Info */}
-                <div className="patient-twin-info mt-3 p-2 bg-dark rounded text-center">
+                <div className="patient-twin-info mt-3 p-2 rounded text-center" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                     <small className="text-muted">Digital Twin:</small>
                     <div className="small">
                         {patientData?.patientName || 'Unknown Patient'} • {patientData?.patientId || 'N/A'}

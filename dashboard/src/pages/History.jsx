@@ -17,6 +17,7 @@ import {
     Legend,
     Filler
 } from 'chart.js';
+import { buildLineChartOptions, useChartTheme, withAlpha } from '../utils/chartTheme';
 
 ChartJS.register(
     CategoryScale,
@@ -30,6 +31,7 @@ ChartJS.register(
 );
 
 function History({ patientData, history }) {
+    const chartTheme = useChartTheme();
     const [timeRange, setTimeRange] = useState('1h');
     const [selectedVital, setSelectedVital] = useState('all');
 
@@ -58,44 +60,19 @@ function History({ patientData, history }) {
 
     const historicalData = generateHistoricalData(timeRange);
 
-    const chartOptions = (title, min, max, color) => ({
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            title: {
-                display: true,
-                text: title,
-                color: '#fff',
-                font: { size: 14 }
-            },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-            }
-        },
-        scales: {
-            x: {
-                display: true,
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#8b949e', maxTicksLimit: 8 }
-            },
-            y: {
-                min, max,
-                grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                ticks: { color: '#8b949e' }
-            }
-        },
-        animation: { duration: 500 }
-    });
+    const chartOptions = (title, min, max) => {
+        const options = buildLineChartOptions(chartTheme, { title, min, max, showLegend: false });
+        options.scales.x.ticks = { ...options.scales.x.ticks, maxTicksLimit: 8 };
+        options.animation = { duration: 500 };
+        return options;
+    };
 
     const createChartData = (data, color) => ({
         labels: historicalData.timestamps,
         datasets: [{
             data: data,
             borderColor: color,
-            backgroundColor: `${color}20`,
+            backgroundColor: withAlpha(color, 0.12),
             borderWidth: 2,
             fill: true,
             tension: 0.4,
@@ -185,8 +162,8 @@ function History({ patientData, history }) {
                                 <div className="card-body">
                                     <div style={{ height: '200px' }}>
                                         <Line
-                                            data={createChartData(historicalData.heartRateData, '#ff6b6b')}
-                                            options={chartOptions('❤️ Heart Rate (BPM)', 50, 160, '#ff6b6b')}
+                                            data={createChartData(historicalData.heartRateData, chartTheme.heart)}
+                                            options={chartOptions('❤️ Heart Rate (BPM)', 50, 160)}
                                         />
                                     </div>
                                 </div>
@@ -202,8 +179,8 @@ function History({ patientData, history }) {
                                 <div className="card-body">
                                     <div style={{ height: '200px' }}>
                                         <Line
-                                            data={createChartData(historicalData.spo2Data, '#4ecdc4')}
-                                            options={chartOptions('🫁 Oxygen Saturation (%)', 85, 100, '#4ecdc4')}
+                                            data={createChartData(historicalData.spo2Data, chartTheme.spo2)}
+                                            options={chartOptions('🫁 Oxygen Saturation (%)', 85, 100)}
                                         />
                                     </div>
                                 </div>
@@ -219,8 +196,8 @@ function History({ patientData, history }) {
                                 <div className="card-body">
                                     <div style={{ height: '200px' }}>
                                         <Line
-                                            data={createChartData(historicalData.temperatureData, '#ffd93d')}
-                                            options={chartOptions('🌡️ Temperature (°C)', 35, 40, '#ffd93d')}
+                                            data={createChartData(historicalData.temperatureData, chartTheme.temp)}
+                                            options={chartOptions('🌡️ Temperature (°C)', 35, 40)}
                                         />
                                     </div>
                                 </div>
@@ -245,7 +222,7 @@ function History({ patientData, history }) {
                                                         <span className={`badge ${event.type === 'critical' ? 'bg-danger' : event.type === 'warning' ? 'bg-warning text-dark' : 'bg-info'} me-2`}>
                                                             {event.type}
                                                         </span>
-                                                        <span className="text-light">{event.event}</span>
+                                                        <span style={{ color: 'var(--text-primary)' }}>{event.event}</span>
                                                     </div>
                                                     <small className="text-muted">{event.date} {event.time}</small>
                                                 </div>

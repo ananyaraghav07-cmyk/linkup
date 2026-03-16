@@ -46,7 +46,7 @@ function Spo2Card({ value, status }) {
                         <span className="vital-icon">🫁</span>
                         <span className="vital-title">{t('spo2')}</span>
                     </div>
-                    <span className="badge bg-dark">SpO₂</span>
+                    <span className="badge" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>SpO₂</span>
                 </div>
 
                 {/* Large Value Display */}
@@ -62,7 +62,7 @@ function Spo2Card({ value, status }) {
 
                 {/* Progress Bar */}
                 <div className="spo2-gauge">
-                    <div className="progress" style={{ height: '20px', backgroundColor: '#1e2430' }}>
+                    <div className="progress" style={{ height: '20px', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                         <div
                             className={`progress-bar ${getProgressColor()}`}
                             role="progressbar"

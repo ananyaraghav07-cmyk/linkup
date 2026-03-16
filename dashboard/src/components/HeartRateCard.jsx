@@ -19,6 +19,7 @@ import {
     Filler
 } from 'chart.js';
 import { useLanguage } from '../i18n';
+import { buildLineChartOptions, useChartTheme, withAlpha } from '../utils/chartTheme';
 
 // Register Chart.js components
 ChartJS.register(
@@ -35,6 +36,7 @@ ChartJS.register(
 function HeartRateCard({ value, history, status }) {
     const cardRef = useRef(null);
     const { t } = useLanguage();
+    const chartTheme = useChartTheme();
 
     // Determine card glow based on status
     const getCardClass = () => {
@@ -51,8 +53,8 @@ function HeartRateCard({ value, history, status }) {
             {
                 label: 'Heart Rate',
                 data: history?.heartRate?.slice(-30) || [],
-                borderColor: '#ff6b6b',
-                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                borderColor: chartTheme.heart,
+                backgroundColor: withAlpha(chartTheme.heart, 0.14),
                 borderWidth: 2,
                 fill: true,
                 tension: 0.4,
@@ -62,36 +64,17 @@ function HeartRateCard({ value, history, status }) {
         ]
     };
 
+    const baseOptions = buildLineChartOptions(chartTheme, { min: 40, max: 160, showLegend: false });
     const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                titleColor: '#fff',
-                bodyColor: '#fff',
-            }
-        },
+        ...baseOptions,
         scales: {
-            x: {
-                display: false,
-            },
+            x: { ...baseOptions.scales.x, display: false },
             y: {
-                min: 40,
-                max: 160,
-                grid: {
-                    color: 'rgba(255, 255, 255, 0.05)',
-                },
-                ticks: {
-                    color: '#8b949e',
-                    font: { size: 10 }
-                }
-            }
+                ...baseOptions.scales.y,
+                ticks: { ...baseOptions.scales.y.ticks, font: { size: 10 } },
+            },
         },
-        animation: {
-            duration: 300
-        }
+        animation: { duration: 300 },
     };
 
     return (

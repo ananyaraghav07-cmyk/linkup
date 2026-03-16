@@ -341,7 +341,7 @@ function NationalEmergencyNetworkCard() {
                                 y1={`${regions[transfer.from].coordinates.y}%`}
                                 x2={`${regions[transfer.to].coordinates.x}%`}
                                 y2={`${regions[transfer.to].coordinates.y}%`}
-                                stroke="#3b82f6"
+                                stroke="var(--accent-blue)"
                                 strokeWidth="2"
                                 style={{
                                     animation: 'pulse 1s infinite'

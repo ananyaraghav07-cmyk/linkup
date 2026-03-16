@@ -224,7 +224,7 @@ function Settings() {
                                 <div className="setting-item">
                                     <label className="d-block mb-2">Auto-Refresh Interval</label>
                                     <select
-                                        className="form-select bg-dark text-light border-secondary"
+                                        className="form-select ll-control"
                                         value={settings.refreshInterval}
                                         onChange={(e) => handleChange('refreshInterval', parseInt(e.target.value))}
                                     >
@@ -251,7 +251,7 @@ function Settings() {
                                             <label className="form-label small">High Threshold</label>
                                             <input
                                                 type="number"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.heartRateHigh}
                                                 onChange={(e) => handleChange('heartRateHigh', parseInt(e.target.value))}
                                             />
@@ -260,7 +260,7 @@ function Settings() {
                                             <label className="form-label small">Low Threshold</label>
                                             <input
                                                 type="number"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.heartRateLow}
                                                 onChange={(e) => handleChange('heartRateLow', parseInt(e.target.value))}
                                             />
@@ -275,7 +275,7 @@ function Settings() {
                                             <label className="form-label small">Critical Level</label>
                                             <input
                                                 type="number"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.spo2Critical}
                                                 onChange={(e) => handleChange('spo2Critical', parseInt(e.target.value))}
                                             />
@@ -284,7 +284,7 @@ function Settings() {
                                             <label className="form-label small">Warning Level</label>
                                             <input
                                                 type="number"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.spo2Warning}
                                                 onChange={(e) => handleChange('spo2Warning', parseInt(e.target.value))}
                                             />
@@ -300,7 +300,7 @@ function Settings() {
                                             <input
                                                 type="number"
                                                 step="0.1"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.temperatureHigh}
                                                 onChange={(e) => handleChange('temperatureHigh', parseFloat(e.target.value))}
                                             />
@@ -310,7 +310,7 @@ function Settings() {
                                             <input
                                                 type="number"
                                                 step="0.1"
-                                                className="form-control bg-dark text-light border-secondary"
+                                                className="form-control ll-control"
                                                 value={settings.temperatureLow}
                                                 onChange={(e) => handleChange('temperatureLow', parseFloat(e.target.value))}
                                             />
@@ -331,7 +331,7 @@ function Settings() {
                                     <label className="form-label">Server URL</label>
                                     <input
                                         type="text"
-                                        className="form-control bg-dark text-light border-secondary"
+                                        className="form-control ll-control"
                                         value={settings.serverUrl}
                                         onChange={(e) => handleChange('serverUrl', e.target.value)}
                                     />
@@ -342,7 +342,7 @@ function Settings() {
                                     <label className="form-label">Reconnect Attempts</label>
                                     <input
                                         type="number"
-                                        className="form-control bg-dark text-light border-secondary"
+                                        className="form-control ll-control"
                                         value={settings.reconnectAttempts}
                                         onChange={(e) => handleChange('reconnectAttempts', parseInt(e.target.value))}
                                     />
@@ -353,7 +353,7 @@ function Settings() {
                                     <label className="form-label">Reconnect Delay (ms)</label>
                                     <input
                                         type="number"
-                                        className="form-control bg-dark text-light border-secondary"
+                                        className="form-control ll-control"
                                         value={settings.reconnectDelay}
                                         onChange={(e) => handleChange('reconnectDelay', parseInt(e.target.value))}
                                     />
@@ -373,7 +373,7 @@ function Settings() {
                                     <div className="col-12 col-md-4">
                                         <label className="form-label">Data Retention (hours)</label>
                                         <select
-                                            className="form-select bg-dark text-light border-secondary"
+                                            className="form-select ll-control"
                                             value={settings.dataRetention}
                                             onChange={(e) => handleChange('dataRetention', parseInt(e.target.value))}
                                         >
@@ -387,7 +387,7 @@ function Settings() {
                                     <div className="col-12 col-md-4">
                                         <label className="form-label">Default Export Format</label>
                                         <select
-                                            className="form-select bg-dark text-light border-secondary"
+                                            className="form-select ll-control"
                                             value={settings.exportFormat}
                                             onChange={(e) => handleChange('exportFormat', e.target.value)}
                                         >

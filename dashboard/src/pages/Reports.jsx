@@ -369,7 +369,7 @@ function Reports({ patientData, history, events }) {
                                     <div className="col-12 col-md-4">
                                         <label className="form-label text-muted">Report Type</label>
                                         <select
-                                            className="form-select bg-dark text-light border-secondary"
+                                            className="form-select ll-control"
                                             value={reportType}
                                             onChange={(e) => setReportType(e.target.value)}
                                         >
@@ -383,7 +383,7 @@ function Reports({ patientData, history, events }) {
                                         <label className="form-label text-muted">From Date</label>
                                         <input
                                             type="date"
-                                            className="form-control bg-dark text-light border-secondary"
+                                            className="form-control ll-control"
                                             value={dateRange.from}
                                             onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
                                         />
@@ -392,7 +392,7 @@ function Reports({ patientData, history, events }) {
                                         <label className="form-label text-muted">To Date</label>
                                         <input
                                             type="date"
-                                            className="form-control bg-dark text-light border-secondary"
+                                            className="form-control ll-control"
                                             value={dateRange.to}
                                             onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
                                         />
@@ -410,7 +410,7 @@ function Reports({ patientData, history, events }) {
                             <div className="card-body" id="printable-report" ref={reportRef}>
                                 <div className="report-preview">
                                     {/* Header */}
-                                    <div className="report-header-preview mb-4 p-3 rounded" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }}>
+                                    <div className="report-header-preview mb-4 p-3 rounded" style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.16) 0%, rgba(59, 130, 246, 0.12) 100%)', border: '1px solid var(--border-color)' }}>
                                         <div className="d-flex justify-content-between align-items-center">
                                             <div>
                                                 <h3 className="mb-1">🏥 LifeLink Twin</h3>
@@ -450,7 +450,7 @@ function Reports({ patientData, history, events }) {
                                     <div className="mb-4">
                                         <h5 className="border-bottom pb-2 mb-3">❤️ Vital Signs</h5>
                                         <div className="table-responsive">
-                                            <table className="table table-dark table-hover">
+                                            <table className="table table-hover ll-table">
                                                 <thead>
                                                     <tr>
                                                         <th>Vital Sign</th>
@@ -492,7 +492,7 @@ function Reports({ patientData, history, events }) {
                                         <h5 className="border-bottom pb-2 mb-3">🚨 Recent Alerts ({reportData.alerts.length})</h5>
                                         {reportData.alerts.length > 0 ? (
                                             <div className="table-responsive">
-                                                <table className="table table-dark table-hover">
+                                                <table className="table table-hover ll-table">
                                                     <thead>
                                                         <tr>
                                                             <th>Severity</th>
@@ -524,7 +524,7 @@ function Reports({ patientData, history, events }) {
                                     <div className="mb-4">
                                         <h5 className="border-bottom pb-2 mb-3">💊 Current Medications</h5>
                                         <div className="table-responsive">
-                                            <table className="table table-dark table-hover">
+                                            <table className="table table-hover ll-table">
                                                 <thead>
                                                     <tr>
                                                         <th>Medication</th>

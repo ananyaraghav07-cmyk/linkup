@@ -65,13 +65,13 @@ function EdgeCloudVisualizerCard({ connected }) {
             )}
         >
             {/* Visual Architecture */}
-            <div className="architecture-visual mb-3 p-3 bg-dark rounded" style={{ overflow: 'hidden' }}>
+            <div className="architecture-visual mb-3 p-3 rounded" style={{ overflow: 'hidden', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
                 <div className="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-3">
                     {/* Edge Device */}
                     <div className="text-center" style={{ flex: '0 0 auto' }}>
                         <div
                             className={`architecture-node p-2 rounded ${metrics.currentDecision === 'edge' ? 'border border-success' : ''}`}
-                            style={{ backgroundColor: '#1a2332' }}
+                            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
                         >
                             <span style={{ fontSize: '2rem' }}>🚑</span>
                             <div className="small mt-1">Edge Device</div>
@@ -81,7 +81,7 @@ function EdgeCloudVisualizerCard({ connected }) {
 
                     {/* Data Flow Animation */}
                     <div className="flex-grow-1 px-1 px-sm-3" style={{ minWidth: 0 }}>
-                        <div className="data-flow-line position-relative" style={{ height: '4px', backgroundColor: '#2d3748' }}>
+                        <div className="data-flow-line position-relative" style={{ height: '4px', backgroundColor: 'var(--bg-secondary)', borderRadius: '999px', border: '1px solid var(--border-color)' }}>
                             <div
                                 className={`data-packet position-absolute ${metrics.currentDecision === 'edge' ? 'bg-success' : 'bg-primary'}`}
                                 style={{
@@ -104,7 +104,7 @@ function EdgeCloudVisualizerCard({ connected }) {
                     <div className="text-center" style={{ flex: '0 0 auto' }}>
                         <div
                             className={`architecture-node p-2 rounded ${metrics.currentDecision === 'cloud' ? 'border border-primary' : ''}`}
-                            style={{ backgroundColor: '#1a2332' }}
+                            style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
                         >
                             <span style={{ fontSize: '2rem' }}>☁️</span>
                             <div className="small mt-1">Cloud Server</div>

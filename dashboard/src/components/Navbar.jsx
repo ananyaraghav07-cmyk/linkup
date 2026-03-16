@@ -153,19 +153,9 @@ function Navbar({
                 {simulatorOn && patients && patients.length > 0 && (
                     <div className="patient-selector me-2">
                         <select
-                            className="form-select form-select-sm patient-dropdown"
+                            className="form-select form-select-sm patient-dropdown ll-control"
                             value={selectedPatientId}
                             onChange={(e) => onSelectPatient(e.target.value)}
-                            style={{
-                                backgroundColor: 'var(--bg-card)',
-                                color: 'var(--text-primary)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '8px',
-                                padding: '6px 30px 6px 10px',
-                                fontSize: '0.8rem',
-                                minWidth: '200px',
-                                cursor: 'pointer'
-                            }}
                         >
                             {patients.map(patient => (
                                 <option key={patient.id} value={patient.id}>
@@ -176,173 +166,63 @@ function Navbar({
                     </div>
                 )}
 
-                {/* Desktop controls (hide on mobile) */}
-                <div className="d-none d-sm-flex align-items-center gap-2">
-
-                    {/* Notification Bell */}
-                    <button
-                        type="button"
-                        className="notification-btn"
-                        onClick={onOpenNotifications}
-                        aria-label="Open notifications"
-                    >
-                        <span className="notification-icon">🔔</span>
-                        {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}
-                    </button>
-
-                    {/* System power toggle (simulator) */}
-                    <button
-                        type="button"
-                        className={`btn btn-sm ${simulatorOn ? 'btn-success' : 'btn-outline-secondary'}`}
-                        onClick={onToggleSimulator}
-                        aria-label="System power"
-                        style={{ borderRadius: '10px' }}
-                    >
-                        {simulatorOn ? '⏻ ON' : '⏻ OFF'}
-                    </button>
-
-                    {/* Theme toggle */}
-                    <button
-                        type="button"
-                        className="theme-toggle-btn"
-                        onClick={onToggleTheme}
-                        aria-label="Toggle theme"
-                    >
-                        {theme === 'dark' ? '🌙' : '☀️'}
-                    </button>
-
-                </div>
-
                 {/* Language Selector Dropdown (desktop/tablet) */}
-                <div className="language-selector me-2 d-none d-sm-block" ref={langDropdownRef} style={{ position: 'relative' }}>
+                <div className="language-selector me-2 d-none d-sm-block" ref={langDropdownRef}>
                     <button
-                        className="lang-trigger-btn d-flex align-items-center gap-2"
+                        className={`lang-trigger-btn d-flex align-items-center gap-2 ${langDropdownOpen ? 'open' : ''}`}
                         onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-                        style={{
-                            backgroundColor: 'var(--bg-card)',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '8px',
-                            padding: '6px 12px',
-                            cursor: 'pointer',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.8rem',
-                            transition: 'all 0.2s ease'
-                        }}
                     >
                         <span>🌐</span>
                         <span className="d-none d-md-inline">{currentLang.nativeName}</span>
-                        <span style={{
-                            fontSize: '0.6rem',
-                            transition: 'transform 0.2s',
-                            transform: langDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'
-                        }}>▼</span>
+                        <span className="lang-caret">▼</span>
                     </button>
 
                     {langDropdownOpen && (
                         <div
                             className="lang-dropdown-menu"
-                            style={{
-                                position: 'absolute',
-                                top: '100%',
-                                right: 0,
-                                marginTop: '8px',
-                                backgroundColor: 'var(--bg-card)',
-                                border: '1px solid var(--border-color)',
-                                borderRadius: '12px',
-                                boxShadow: '0 10px 40px var(--shadow-color)',
-                                zIndex: 1000,
-                                minWidth: '220px',
-                                overflow: 'hidden',
-                                animation: 'slideDown 0.2s ease'
-                            }}
                         >
                             {/* Search Input */}
-                            <div style={{ padding: '12px', borderBottom: '1px solid var(--border-color)' }}>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="text"
-                                        placeholder={`🔍 ${t('searchLanguage')}`}
-                                        value={langSearch}
-                                        onChange={(e) => setLangSearch(e.target.value)}
-                                        autoFocus
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px 12px',
-                                            border: '1px solid var(--border-color)',
-                                            borderRadius: '8px',
-                                            backgroundColor: 'var(--bg-input)',
-                                            color: 'var(--text-primary)',
-                                            fontSize: '0.85rem',
-                                            outline: 'none'
-                                        }}
-                                    />
-                                </div>
-                                <small style={{ color: 'var(--text-muted)', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+                            <div className="lang-dropdown-header">
+                                <input
+                                    type="text"
+                                    className="form-control ll-control lang-search"
+                                    placeholder={`🔍 ${t('searchLanguage')}`}
+                                    value={langSearch}
+                                    onChange={(e) => setLangSearch(e.target.value)}
+                                    autoFocus
+                                />
+                                <small className="lang-hint">
                                     {filteredLanguages.length} {t('languagesFound')}
                                 </small>
                             </div>
 
                             {/* Language List - Max 5 visible */}
-                            <div style={{ maxHeight: '240px', overflowY: 'auto' }}>
+                            <div className="lang-dropdown-list">
                                 {displayedLanguages.length > 0 ? (
                                     displayedLanguages.map(lang => (
                                         <div
                                             key={lang.code}
                                             onClick={() => handleLanguageSelect(lang.code)}
-                                            style={{
-                                                padding: '10px 16px',
-                                                cursor: 'pointer',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '12px',
-                                                backgroundColor: lang.code === language ? 'var(--accent-blue)' : 'transparent',
-                                                borderBottom: '1px solid var(--border-color)',
-                                                transition: 'background-color 0.15s'
-                                            }}
-                                            onMouseEnter={(e) => {
-                                                if (lang.code !== language) {
-                                                    e.currentTarget.style.backgroundColor = 'var(--bg-card-hover)';
-                                                }
-                                            }}
-                                            onMouseLeave={(e) => {
-                                                e.currentTarget.style.backgroundColor = lang.code === language ? 'var(--accent-blue)' : 'transparent';
-                                            }}
+                                            className={`lang-item ${lang.code === language ? 'active' : ''}`}
                                         >
-                                            <span style={{ fontSize: '1.2rem' }}>{lang.flag}</span>
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{
-                                                    fontWeight: '500',
-                                                    color: lang.code === language ? '#fff' : 'var(--text-primary)',
-                                                    fontSize: '0.85rem'
-                                                }}>
-                                                    {lang.nativeName}
-                                                </div>
-                                                <small style={{
-                                                    color: lang.code === language ? 'rgba(255,255,255,0.8)' : 'var(--text-muted)',
-                                                    fontSize: '0.7rem'
-                                                }}>
-                                                    {lang.name}
-                                                </small>
+                                            <span className="lang-flag">{lang.flag}</span>
+                                            <div className="lang-text">
+                                                <div className="lang-native">{lang.nativeName}</div>
+                                                <small className="lang-name">{lang.name}</small>
                                             </div>
                                             {lang.code === language && (
-                                                <span style={{ color: '#fff' }}>✓</span>
+                                                <span className="lang-check">✓</span>
                                             )}
                                         </div>
                                     ))
                                 ) : (
-                                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    <div className="lang-empty">
                                         No languages found
                                     </div>
                                 )}
 
                                 {filteredLanguages.length > 5 && (
-                                    <div style={{
-                                        padding: '8px 16px',
-                                        textAlign: 'center',
-                                        color: 'var(--text-muted)',
-                                        fontSize: '0.75rem',
-                                        backgroundColor: 'var(--bg-input)'
-                                    }}>
+                                    <div className="lang-footer">
                                         +{filteredLanguages.length - 5} more • Type to search
                                     </div>
                                 )}

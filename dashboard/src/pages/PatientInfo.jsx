@@ -184,7 +184,7 @@ function PatientInfo({ patientData }) {
                                 <h5 className="card-title mb-4">📜 Medical History</h5>
                                 <ul className="list-group list-group-flush bg-transparent">
                                     {patientDetails.medicalHistory.map((item, index) => (
-                                        <li key={index} className="list-group-item bg-transparent text-light border-secondary">
+                                        <li key={index} className="list-group-item ll-list-item">
                                             <span className="me-2">•</span> {item}
                                         </li>
                                     ))}
@@ -208,7 +208,7 @@ function PatientInfo({ patientData }) {
                             <div className="card-body">
                                 <h5 className="card-title mb-4">💊 Current Medications</h5>
                                 <div className="table-responsive">
-                                    <table className="table table-dark table-hover">
+                                    <table className="table table-hover ll-table">
                                         <thead>
                                             <tr>
                                                 <th>Medication</th>

@@ -136,7 +136,7 @@ function Alerts({ events, patientData }) {
                                     <div className="col-12 col-md-6">
                                         <input
                                             type="text"
-                                            className="form-control bg-dark text-light border-secondary"
+                                            className="form-control ll-control"
                                             placeholder="🔍 Search alerts..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -192,7 +192,10 @@ function Alerts({ events, patientData }) {
                                             <div
                                                 key={alert.id}
                                                 className={`alert-item p-3 border-bottom border-secondary ${alert.acknowledged ? 'opacity-50' : ''}`}
-                                                style={{ borderLeft: `4px solid ${alert.type === 'critical' ? '#dc3545' : alert.type === 'warning' ? '#ffc107' : '#0dcaf0'}` }}
+                                                style={{
+                                                    borderLeft: `4px solid ${alert.type === 'critical' ? '#dc3545' : alert.type === 'warning' ? '#ffc107' : '#0dcaf0'}`,
+                                                    borderColor: 'var(--border-color)'
+                                                }}
                                             >
                                                 <div className="d-flex justify-content-between align-items-start">
                                                     <div className="d-flex gap-3">
@@ -207,7 +210,7 @@ function Alerts({ events, patientData }) {
                                                                     <span className="badge bg-success">✓ Acknowledged</span>
                                                                 )}
                                                             </div>
-                                                            <p className="mb-1 text-light">{alert.message}</p>
+                                                            <p className="mb-1" style={{ color: 'var(--text-primary)' }}>{alert.message}</p>
                                                             <small className="text-muted">{alert.date} at {alert.time}</small>
                                                         </div>
                                                     </div>
