@@ -3,7 +3,7 @@
  * 
  * Automated emergency escalation system that:
  * - Monitors vital thresholds and triggers appropriate responses
- * - Escalates through notification tiers (Nurse → Doctor → Specialist → Code Team)
+ * - Escalates through notification tiers (Doctor → Specialist → Code Team)
  * - Tracks escalation timeline and response status
  * - Provides protocol guidance based on condition
  */
@@ -27,8 +27,8 @@ function EmergencyEscalationCard({ patientData, vitals }) {
     // Escalation levels configuration
     const escalationLevels = [
         { level: 0, name: 'Normal', color: '#10b981', icon: '✅', responders: [] },
-        { level: 1, name: 'Alert', color: '#3b82f6', icon: '📢', responders: ['Bedside Nurse'] },
-        { level: 2, name: 'Warning', color: '#f59e0b', icon: '⚠️', responders: ['Charge Nurse', 'On-call Physician'] },
+        { level: 1, name: 'Alert', color: '#3b82f6', icon: '📢', responders: ['On-call Doctor'] },
+        { level: 2, name: 'Warning', color: '#f59e0b', icon: '⚠️', responders: ['Senior Doctor', 'On-call Physician'] },
         { level: 3, name: 'Critical', color: '#ef4444', icon: '🚨', responders: ['Attending Physician', 'ICU Team', 'Specialist On-call'] },
         { level: 4, name: 'Emergency', color: '#dc2626', icon: '🆘', responders: ['Code Blue Team', 'Anesthesiologist', 'All Available Staff'] }
     ];

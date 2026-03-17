@@ -11,9 +11,7 @@ import { API_BASE_URL } from '../config/api';
 
 // Demo users for when backend is not available (production demo)
 const DEMO_USERS = {
-    admin: { username: 'admin', password: 'admin123', role: 'admin', name: 'System Administrator', email: 'admin@lifelink.com' },
-    doctor: { username: 'doctor', password: 'doctor123', role: 'doctor', name: 'Dr. Smith', email: 'doctor@lifelink.com' },
-    nurse: { username: 'nurse', password: 'nurse123', role: 'nurse', name: 'Nurse Johnson', email: 'nurse@lifelink.com' }
+    doctor: { username: 'doctor', password: 'doctor123', role: 'doctor', name: 'Dr. Smith', email: 'doctor@lifelink.com' }
 };
 
 function Login({ onLogin }) {
@@ -61,6 +59,10 @@ function Login({ onLogin }) {
             const data = await response.json();
 
             if (data.success) {
+                if (data.user?.role && data.user.role !== 'doctor') {
+                    setError('Access restricted: doctor-only dashboard.');
+                    return;
+                }
                 // Store token and user info
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('user', JSON.stringify(data.user));
@@ -166,34 +168,12 @@ function Login({ onLogin }) {
                             <button
                                 type="button"
                                 className="credential-btn"
-                                onClick={() => fillCredentials('admin', 'admin123')}
-                            >
-                                <span className="role-icon">👤</span>
-                                <div className="credential-info">
-                                    <span className="credential-user">admin</span>
-                                    <span className="credential-role">System Administrator</span>
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                className="credential-btn"
                                 onClick={() => fillCredentials('doctor', 'doctor123')}
                             >
                                 <span className="role-icon">👨‍⚕️</span>
                                 <div className="credential-info">
                                     <span className="credential-user">doctor</span>
                                     <span className="credential-role">Medical Doctor</span>
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                className="credential-btn"
-                                onClick={() => fillCredentials('nurse', 'nurse123')}
-                            >
-                                <span className="role-icon">👩‍⚕️</span>
-                                <div className="credential-info">
-                                    <span className="credential-user">nurse</span>
-                                    <span className="credential-role">Nursing Staff</span>
                                 </div>
                             </button>
                         </div>

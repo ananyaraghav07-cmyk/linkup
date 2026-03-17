@@ -22,6 +22,7 @@ import {
   PatientInfo,
   Alerts,
   History,
+  PatientLog,
   Reports,
   Settings
 } from './pages';
@@ -662,6 +663,15 @@ function App() {
                       <History
                         patientData={patientData}
                         history={history}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/patient-log"
+                    element={
+                      <PatientLog
+                        patientLogs={patientLogs}
+                        patientData={patientData}
                       />
                     }
                   />

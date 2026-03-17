@@ -4,12 +4,12 @@
  * Top navigation bar with hamburger menu toggle,
  * connection status, theme toggle, language selector, patient selector, and current time display.
  * Pan India multi-language support.
- * Role-based display for different user types.
+ * Doctor-only dashboard.
  */
 
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../i18n';
-import { getRoleDisplayName, getRoleIcon, isMedicalRole, isAdminRole } from '../utils/rbac';
+import { getRoleDisplayName, getRoleIcon } from '../utils/rbac';
 
 // Language configurations with native names
 const LANGUAGES = [

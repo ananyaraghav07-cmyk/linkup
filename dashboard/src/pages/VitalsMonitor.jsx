@@ -4,7 +4,7 @@
  * Detailed vital signs monitoring with larger charts and more data
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -19,6 +19,14 @@ import {
     Filler
 } from 'chart.js';
 import { buildLineChartOptions, useChartTheme, withAlpha } from '../utils/chartTheme';
+
+import RiskScoreCard from '../components/RiskScoreCard';
+import StabilityIndicatorCard from '../components/StabilityIndicatorCard';
+import InsightsPanelCard from '../components/InsightsPanelCard';
+import SimulationModeSelectorCard from '../components/SimulationModeSelectorCard';
+
+import { analyzeVitals } from '../modules/insightsEngine';
+import { SCENARIO_MODES, applyScenarioToVitals } from '../modules/scenarioModes';
 
 ChartJS.register(
     CategoryScale,
@@ -36,6 +44,42 @@ function VitalsMonitor({ patientData, history }) {
     const chartTheme = useChartTheme();
     const vitals = patientData?.vitals || {};
     const status = patientData?.status || 'normal';
+
+    const [simMode, setSimMode] = useState(SCENARIO_MODES.normal);
+
+    const buffers = useMemo(() => {
+        const now = Date.now();
+        const pointsFromSeries = (series) => {
+            const values = (series || []).slice(-60).map(Number).filter(Number.isFinite);
+            const n = values.length;
+            return values.map((v, i) => ({
+                t: now - (n - 1 - i) * 1000,
+                v,
+            }));
+        };
+
+        return {
+            hrPoints: pointsFromSeries(history?.heartRate),
+            spo2Points: pointsFromSeries(history?.spo2),
+            tempPoints: pointsFromSeries(history?.temperature),
+        };
+    }, [history?.heartRate, history?.spo2, history?.temperature]);
+
+    const analysis = useMemo(() => {
+        const scenarioVitals = applyScenarioToVitals(
+            {
+                heartRate: vitals.heartRate,
+                spo2: vitals.spo2,
+                temperature: vitals.temperature,
+            },
+            simMode
+        );
+
+        return analyzeVitals({
+            vitals: scenarioVitals,
+            buffers,
+        });
+    }, [vitals?.heartRate, vitals?.spo2, vitals?.temperature, buffers, simMode]);
 
     // Heart Rate Chart
     const heartRateData = {
@@ -111,6 +155,22 @@ function VitalsMonitor({ patientData, history }) {
             </div>
 
             <div className="container-fluid px-0">
+                {/* Intelligent Monitoring Row */}
+                <div className="row g-3 mb-4">
+                    <div className="col-12 col-md-6 col-xl-3">
+                        <RiskScoreCard analysis={analysis} />
+                    </div>
+                    <div className="col-12 col-md-6 col-xl-3">
+                        <StabilityIndicatorCard analysis={analysis} />
+                    </div>
+                    <div className="col-12 col-xl-3">
+                        <InsightsPanelCard analysis={analysis} />
+                    </div>
+                    <div className="col-12 col-md-6 col-xl-3">
+                        <SimulationModeSelectorCard mode={simMode} onChangeMode={setSimMode} />
+                    </div>
+                </div>
+
                 {/* Summary Cards Row */}
                 <div className="row g-3 mb-4">
                     <div className="col-12 col-md-4">

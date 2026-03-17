@@ -9,7 +9,7 @@
 import { useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useLanguage } from '../i18n';
-import { isMenuItemAllowed, isMedicalRole, isAdminRole, getRoleIcon } from '../utils/rbac';
+import { isMedicalRole } from '../utils/rbac';
 
 const LANGUAGES = [
     { code: 'en', nativeName: 'English' },
@@ -49,21 +49,14 @@ function Sidebar({
     const allMenuItems = [
         { id: 'dashboard', path: '/', icon: '📊', labelKey: 'dashboard', badge: null },
 
-        // Patient Care Section (Medical Staff - Doctor/Nurse)
-        { id: 'divider-patient', isDivider: true, label: 'PATIENT CARE', roles: ['doctor', 'nurse'] },
-        { id: 'vitals', path: '/vitals', icon: '❤️', labelKey: 'vitalsMonitor', badge: 'live', roles: ['doctor', 'nurse'] },
-        { id: 'patient', path: '/patient', icon: '👤', labelKey: 'patientInfo', badge: null, roles: ['doctor', 'nurse'] },
-        { id: 'alerts', path: '/alerts', icon: '🚨', labelKey: 'alerts', badge: '3', roles: ['doctor', 'nurse'] },
-        { id: 'history', path: '/history', icon: '📈', labelKey: 'history', badge: null, roles: ['doctor', 'nurse'] },
-        { id: 'reports', path: '/reports', icon: '📋', labelKey: 'reports', badge: null, roles: ['doctor', 'nurse'] },
-
-        // Network & Infrastructure (Admin Only)
-        { id: 'divider2', isDivider: true, label: 'System Infrastructure', roles: ['admin'] },
-        { id: 'edgecloud', path: '/edgecloud', icon: '☁️', labelKey: 'edgeCloud', badge: null, roles: ['admin'] },
-        { id: 'qos', path: '/qos', icon: '📡', labelKey: 'networkQoS', badge: null, roles: ['admin'] },
-        { id: 'edgefailure', path: '/edgefailure', icon: '🔄', labelKey: 'edgeFailureBackup', badge: null, roles: ['admin'] },
-        { id: 'national', path: '/national', icon: '🌐', labelKey: 'nationalNetwork', badge: null, roles: ['admin'] },
-        { id: 'scenario', path: '/scenario', icon: '▶️', labelKey: 'scenarioPlayback', badge: null, roles: ['admin'] },
+        // Patient Care Section (Doctor)
+        { id: 'divider-patient', isDivider: true, label: 'PATIENT CARE', roles: ['doctor'] },
+        { id: 'vitals', path: '/vitals', icon: '❤️', labelKey: 'vitalsMonitor', badge: 'live', roles: ['doctor'] },
+        { id: 'patient', path: '/patient', icon: '👤', labelKey: 'patientInfo', badge: null, roles: ['doctor'] },
+        { id: 'alerts', path: '/alerts', icon: '🚨', labelKey: 'alerts', badge: '3', roles: ['doctor'] },
+        { id: 'history', path: '/history', icon: '📈', labelKey: 'history', badge: null, roles: ['doctor'] },
+        { id: 'patient-log', path: '/patient-log', icon: '🗒️', label: 'Patient Log', badge: null, roles: ['doctor'] },
+        { id: 'reports', path: '/reports', icon: '📋', labelKey: 'reports', badge: null, roles: ['doctor'] },
 
         { id: 'divider4', isDivider: true },
         { id: 'settings', path: '/settings', icon: '⚙️', labelKey: 'settings', badge: null },
@@ -79,17 +72,10 @@ function Sidebar({
 
             // If item has specific roles, check if user's role matches
             if (item.roles) {
-                if (isMedicalRole(userRole) && (item.roles.includes('doctor') || item.roles.includes('nurse'))) {
-                    return true;
-                }
-                if (isAdminRole(userRole) && item.roles.includes('admin')) {
-                    return true;
-                }
-                return false;
+                return isMedicalRole(userRole) && item.roles.includes('doctor');
             }
 
-            // Check regular items using RBAC
-            return isMenuItemAllowed(userRole, item.id);
+            return false;
         });
     }, [userRole]);
 
@@ -203,20 +189,6 @@ function Sidebar({
                     </div>
                 )}
 
-                {/* System Status Card (Admin Only) */}
-                {isAdminRole(userRole) && (
-                    <div className="sidebar-patient-card" style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0d47a1 100%)' }}>
-                        <div className="patient-avatar-sm">
-                            <span>🔧</span>
-                        </div>
-                        <div className="patient-details">
-                            <span className="patient-name-sm">System Status</span>
-                            <span className="patient-id-sm">Infrastructure Monitor</span>
-                        </div>
-                        <span className="status-indicator-sm online"></span>
-                    </div>
-                )}
-
                 {/* Navigation Menu */}
                 <nav className="sidebar-nav">
                     <ul className="nav-list">
@@ -231,10 +203,10 @@ function Sidebar({
                                         to={item.path}
                                         className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                                         onClick={() => window.innerWidth < 992 && onToggle()}
-                                        title={collapseOnDesktop ? t(item.labelKey) : undefined}
+                                        title={collapseOnDesktop ? (item.labelKey ? t(item.labelKey) : item.label) : undefined}
                                     >
                                         <span className="nav-icon">{item.icon}</span>
-                                        <span className="nav-label">{t(item.labelKey)}</span>
+                                        <span className="nav-label">{item.labelKey ? t(item.labelKey) : item.label}</span>
                                         {item.badge && (
                                             <span className={`nav-badge ${item.badge === 'live' ? 'live' : item.badge === 'AI' ? 'ai' : ''}`}>
                                                 {item.badge === 'live' ? t('live') : item.badge}
