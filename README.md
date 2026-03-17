@@ -96,7 +96,7 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
 4. **Login:**
 Visit [http://localhost:3000/login.html](http://localhost:3000/login.html) and use:
-- Username: `admin`, Password: `admin123`
+- Username: `doctor`, Password: `doctor123`
 
 5. **Test Authentication (Optional):**
 ```bash
@@ -109,11 +109,9 @@ npm run test:auth
 - **Password Hashing:** bcrypt with salt (10 rounds)
 - **JWT Tokens:** Secure token-based authentication
 - **Protected Routes:** All patient data endpoints require authentication
-- **Role-Based Access:** Admin, Doctor, and Nurse roles
+- **Role-Based Access:** Doctor-only
 - **Default Users:**
-  - `admin/admin123` (Admin)
   - `doctor/doctor123` (Doctor)
-  - `nurse/nurse123` (Nurse)
 - **Login Page:** [http://localhost:3000/login.html](http://localhost:3000/login.html)
 - See [SECURITY.md](SECURITY.md) for detailed documentation
 

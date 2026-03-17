@@ -25,9 +25,7 @@ const {
     createDefaultUsers,
     authenticateUser,
     registerUser,
-    getAllUsers,
     authMiddleware,
-    adminMiddleware
 } = require('./auth');
 
 // Configuration
@@ -180,16 +178,6 @@ app.get('/api/auth/session', (req, res) => {
             message: 'No active session'
         });
     }
-});
-
-// Get all users (admin only)
-app.get('/api/auth/users', authMiddleware, adminMiddleware, (req, res) => {
-    const users = getAllUsers();
-    res.json({
-        success: true,
-        count: users.length,
-        users
-    });
 });
 
 // ==================== Protected API Routes ====================

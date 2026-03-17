@@ -9,7 +9,7 @@ LifeLink Twin now includes a secure authentication system with hashed passwords 
 - ✅ **Password Hashing**: All passwords are hashed using bcrypt with salt
 - ✅ **JWT Tokens**: Secure token-based authentication
 - ✅ **Session Management**: HTTP-only cookies for token storage
-- ✅ **Role-Based Access**: Admin, Doctor, and Nurse roles
+- ✅ **Role-Based Access**: Doctor-only
 - ✅ **Protected API Routes**: All patient data endpoints require authentication
 
 ### Default Users
@@ -18,9 +18,7 @@ For demo purposes, the system includes pre-configured users:
 
 | Username | Password  | Role   | Access Level          |
 |----------|-----------|--------|-----------------------|
-| admin    | admin123  | Admin  | Full system access    |
 | doctor   | doctor123 | Doctor | Patient data access   |
-| nurse    | nurse123  | Nurse  | Limited data access   |
 
 ⚠️ **Important**: Change these credentials in production!
 
@@ -34,8 +32,8 @@ POST /api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "password": "admin123"
+  "username": "doctor",
+  "password": "doctor123"
 }
 
 Response:
@@ -44,10 +42,10 @@ Response:
   "message": "Login successful",
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
-    "username": "admin",
-    "role": "admin",
-    "name": "System Administrator",
-    "email": "admin@lifelink.com"
+    "username": "doctor",
+    "role": "doctor",
+    "name": "Dr. Smith",
+    "email": "doctor@lifelink.com"
   }
 }
 ```
@@ -62,8 +60,10 @@ Content-Type: application/json
   "password": "password123",
   "name": "New User",
   "email": "user@example.com",
-  "role": "user"
+  "role": "doctor"
 }
+
+Note: this deployment enforces doctor-only registration; any non-`doctor` role will be rejected.
 ```
 
 #### Logout
@@ -74,12 +74,6 @@ POST /api/auth/logout
 #### Get Current User
 ```
 GET /api/auth/me
-Authorization: Bearer <token>
-```
-
-#### Get All Users (Admin Only)
-```
-GET /api/auth/users
 Authorization: Bearer <token>
 ```
 
@@ -216,7 +210,7 @@ Test the authentication system:
 # Login
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}'
+  -d '{"username":"doctor","password":"doctor123"}'
 
 # Get current user
 curl http://localhost:3000/api/auth/me \
@@ -236,10 +230,6 @@ curl http://localhost:3000/api/patients \
 ### "Invalid or expired token" error
 - Token may have expired (24h default)
 - Re-login to get a new token
-
-### "Admin access required" error
-- User role doesn't have sufficient permissions
-- Login with admin credentials
 
 ## Future Enhancements
 

@@ -14,29 +14,15 @@ const JWT_EXPIRES_IN = '24h';
 // In-memory user store (In production, use a real database)
 const users = new Map();
 
-// Default admin user for demo
+// Default user(s) for demo
 const createDefaultUsers = async () => {
     const defaultUsers = [
-        {
-            username: 'admin',
-            password: 'admin123',
-            role: 'admin',
-            name: 'System Administrator',
-            email: 'admin@lifelink.com'
-        },
         {
             username: 'doctor',
             password: 'doctor123',
             role: 'doctor',
             name: 'Dr. Smith',
             email: 'doctor@lifelink.com'
-        },
-        {
-            username: 'nurse',
-            password: 'nurse123',
-            role: 'nurse',
-            name: 'Nurse Johnson',
-            email: 'nurse@lifelink.com'
         }
     ];
 
@@ -53,9 +39,7 @@ const createDefaultUsers = async () => {
     }
 
     console.log('✅ Default users created:');
-    console.log('   👤 admin/admin123 (Admin)');
     console.log('   👨‍⚕️ doctor/doctor123 (Doctor)');
-    console.log('   👩‍⚕️ nurse/nurse123 (Nurse)');
 };
 
 /**
@@ -114,6 +98,11 @@ const verifyToken = (token) => {
 const registerUser = async (userData) => {
     const { username, password, role, name, email } = userData;
 
+    // Enforce doctor-only accounts for this deployment
+    if (role && role !== 'doctor') {
+        return { success: false, message: 'Only doctor accounts can be registered' };
+    }
+
     // Validation
     if (!username || !password || !name) {
         return { success: false, message: 'Username, password, and name are required' };
@@ -134,7 +123,7 @@ const registerUser = async (userData) => {
     const newUser = {
         username,
         password: hashedPassword,
-        role: role || 'user',
+        role: 'doctor',
         name,
         email: email || '',
         createdAt: new Date().toISOString()
@@ -190,20 +179,6 @@ const authenticateUser = async (username, password) => {
 };
 
 /**
- * Get all users (admin only)
- * @returns {Array} List of users (without passwords)
- */
-const getAllUsers = () => {
-    return Array.from(users.values()).map(user => ({
-        username: user.username,
-        role: user.role,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt
-    }));
-};
-
-/**
  * Middleware to protect routes
  * Checks both JWT token and session
  */
@@ -232,16 +207,6 @@ const authMiddleware = (req, res, next) => {
 };
 
 /**
- * Middleware to check admin role
- */
-const adminMiddleware = (req, res, next) => {
-    if (req.user.role !== 'admin') {
-        return res.status(403).json({ success: false, message: 'Admin access required' });
-    }
-    next();
-};
-
-/**
  * Session-based auth middleware (stricter - only session, no JWT)
  */
 const sessionAuthMiddleware = (req, res, next) => {
@@ -260,8 +225,6 @@ module.exports = {
     verifyToken,
     registerUser,
     authenticateUser,
-    getAllUsers,
     authMiddleware,
-    adminMiddleware,
     sessionAuthMiddleware
 };

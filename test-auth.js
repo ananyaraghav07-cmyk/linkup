@@ -47,6 +47,28 @@ async function testLogin(username, password) {
     }
 }
 
+async function testRegisterDoctor({ username, password, name, email, role }) {
+    try {
+        const response = await fetch(`${BASE_URL}/api/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password, name, email, role })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            log.success(`Registration successful: ${data.user.username} (${data.user.role})`);
+            return true;
+        }
+
+        log.error(`Registration failed: ${data.message}`);
+        return false;
+    } catch (error) {
+        log.error(`Registration error: ${error.message}`);
+        return false;
+    }
+}
+
 async function testProtectedEndpoint(token) {
     try {
         const response = await fetch(`${BASE_URL}/api/patients`, {
@@ -113,7 +135,7 @@ async function testWrongPassword() {
         const response = await fetch(`${BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: 'admin', password: 'wrongpassword' })
+            body: JSON.stringify({ username: 'doctor', password: 'wrongpassword' })
         });
 
         const data = await response.json();
@@ -161,17 +183,17 @@ async function runTests() {
 
     // Test 1: Login with valid credentials
     console.log('Test 1: Login with valid credentials');
-    const adminToken = await testLogin('admin', 'admin123');
+    const doctorToken = await testLogin('doctor', 'doctor123');
     console.log();
 
-    if (!adminToken) {
+    if (!doctorToken) {
         log.error('Cannot proceed without valid token');
         return;
     }
 
     // Test 2: Access protected endpoint with valid token
     console.log('Test 2: Access protected endpoint with valid token');
-    await testProtectedEndpoint(adminToken);
+    await testProtectedEndpoint(doctorToken);
     console.log();
 
     // Test 3: Test invalid token
@@ -191,13 +213,27 @@ async function runTests() {
 
     // Test 6: Get current user
     console.log('Test 6: Get current user info');
-    await testGetCurrentUser(adminToken);
+    await testGetCurrentUser(doctorToken);
     console.log();
 
-    // Test 7: Login with different roles
-    console.log('Test 7: Login with different roles');
-    await testLogin('doctor', 'doctor123');
-    await testLogin('nurse', 'nurse123');
+    // Test 7: Doctor-only registration enforcement
+    console.log('Test 7: Doctor-only registration enforcement');
+    const newDoctorUsername = `doctor_test_${Date.now()}`;
+    await testRegisterDoctor({
+        username: newDoctorUsername,
+        password: 'doctor123',
+        name: 'Dr. Test',
+        email: 'doctor.test@lifelink.com',
+        role: 'doctor'
+    });
+
+    await testRegisterDoctor({
+        username: `admin_test_${Date.now()}`,
+        password: 'admin123',
+        name: 'Not Allowed',
+        email: 'not.allowed@lifelink.com',
+        role: 'user'
+    });
     console.log();
 
     console.log('='.repeat(60));
@@ -208,7 +244,7 @@ async function runTests() {
     console.log('  • Password hashing: bcrypt with salt');
     console.log('  • Token type: JWT (HS256)');
     console.log('  • Token expiry: 24 hours');
-    console.log('  • Default users: admin, doctor, nurse');
+    console.log('  • Default users: doctor');
     console.log('  • Protected endpoints: /api/patient/:id, /api/patients');
     console.log('\n🔗 Login page: http://localhost:3000/login.html\n');
 }

@@ -222,9 +222,7 @@
             <div class="demo-credentials">
                 <h3>🔑 Demo Credentials</h3>
                 <ul>
-                    <li><strong>admin</strong> / admin123 (Admin)</li>
                     <li><strong>doctor</strong> / doctor123 (Doctor)</li>
-                    <li><strong>nurse</strong> / nurse123 (Nurse)</li>
                 </ul>
             </div>
         </div>
@@ -266,6 +264,12 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    if (data.user?.role && data.user.role !== 'doctor') {
+                        showAlert('Access restricted: doctor-only dashboard.');
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = 'Login';
+                        return;
+                    }
                     showAlert('Login successful! Redirecting...', 'success');
 
                     // Store token in localStorage
@@ -298,9 +302,7 @@
 
                 // Set password based on username
                 const passwords = {
-                    'admin': 'admin123',
-                    'doctor': 'doctor123',
-                    'nurse': 'nurse123'
+                    'doctor': 'doctor123'
                 };
                 document.getElementById('password').value = passwords[username] || '';
             });
