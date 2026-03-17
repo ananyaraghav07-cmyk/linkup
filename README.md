@@ -31,10 +31,13 @@ LifeLinkTwin/
 │   └── index.js        # Filters data, detects emergencies
 ├── server/             # Cloud Server
 │   └── index.js        # Express + WebSocket server
-├── public/             # Digital Twin Dashboard
+├── public/             # Basic/legacy dashboard (served by the server)
 │   ├── index.html      # Dashboard HTML
 │   ├── styles.css      # Modern dark theme styles
 │   └── app.js          # Real-time chart logic
+├── dashboard/          # React doctor dashboard (Vite)
+│   ├── src/
+│   └── package.json
 ├── package.json        # Dependencies
 └── README.md           # This file
 ```
@@ -78,6 +81,8 @@ npm install
 npm run start:all
 ```
 
+Note: `start:all` runs `server/`, `edge/`, and `simulator/`. The React doctor dashboard in `dashboard/` is started separately.
+
 Or run each service in separate terminals:
 
 ```bash
@@ -92,13 +97,22 @@ npm run start:simulator
 ```
 
 3. **Open Dashboard:**
-Visit [http://localhost:3000](http://localhost:3000) in your browser.
+Visit either:
+- Basic dashboard: [http://localhost:3000](http://localhost:3000)
+- React doctor dashboard: [http://127.0.0.1:5173](http://127.0.0.1:5173) (see next step)
 
-4. **Login:**
+4. **(Recommended) Start the React doctor dashboard:**
+```bash
+cd dashboard
+npm install
+npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+5. **Login:**
 Visit [http://localhost:3000/login.html](http://localhost:3000/login.html) and use:
 - Username: `doctor`, Password: `doctor123`
 
-5. **Test Authentication (Optional):**
+6. **Test Authentication (Optional):**
 ```bash
 npm run test:auth
 ```
@@ -110,6 +124,7 @@ npm run test:auth
 - **JWT Tokens:** Secure token-based authentication
 - **Protected Routes:** All patient data endpoints require authentication
 - **Role-Based Access:** Doctor-only
+- **Doctor-only Registration:** `POST /api/auth/register` only allows `doctor` role (any other role is rejected)
 - **Default Users:**
   - `doctor/doctor123` (Doctor)
 - **Login Page:** [http://localhost:3000/login.html](http://localhost:3000/login.html)
@@ -144,13 +159,14 @@ npm run test:auth
   - Session management
 - API Endpoints:
   - `POST /api/auth/login` - User login
+  - `POST /api/auth/register` - Register a doctor account (doctor-only)
   - `POST /api/auth/logout` - User logout
   - `GET /api/auth/me` - Current user info
   - `GET /api/patients` - All patients (protected)
   - `GET /api/patient/:id` - Specific patient (protected)
   - `GET /api/health` - Server health check
 
-### Digital Twin Dashboard (`/public`)
+### Basic Dashboard (`/public`)
 - **Real-time Heart Rate Chart** (Chart.js)
 - **SpO2 Gauge** with color gradient
 - **Temperature Indicator**
@@ -213,7 +229,7 @@ The dashboard displays:
 - **Backend:** Node.js, Express.js
 - **Messaging:** MQTT (Mosquitto)
 - **Real-time:** Socket.io WebSockets
-- **Frontend:** HTML5, CSS3, JavaScript
+- **Frontend:** React (Vite) + HTML5/CSS3/JavaScript
 - **Charts:** Chart.js
 - **Process Manager:** Concurrently
 
