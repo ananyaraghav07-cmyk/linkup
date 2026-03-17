@@ -291,24 +291,6 @@ function MultiPatientCard({
                             <div style={{ color: 'var(--text-muted)' }}>No patient selected.</div>
                         </div>
                     )}
-
-                    {/* Network Stats */}
-                    <div className="mt-3 p-2 rounded" style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)' }}>
-                        <div className="d-flex justify-content-around text-center">
-                            <div>
-                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('totalNodes')}</small>
-                                <span className="fw-bold" style={{ color: 'var(--accent-cyan)' }}>{(patients || []).length}</span>
-                            </div>
-                            <div>
-                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('dataStreams')}</small>
-                                <span className="fw-bold" style={{ color: 'var(--status-normal)' }}>{(patients || []).length * 3}</span>
-                            </div>
-                            <div>
-                                <small className="d-block" style={{ color: 'var(--text-muted)' }}>{t('iotNetwork')}</small>
-                                <span className="fw-bold" style={{ color: 'var(--accent-blue)' }}>{t('active')}</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
