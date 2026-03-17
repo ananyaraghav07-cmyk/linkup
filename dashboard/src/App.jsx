@@ -625,6 +625,7 @@ function App() {
                         lastUpdate={lastUpdate}
                         patients={patients}
                         allPatientsData={allPatientsData}
+                        allPatientsHistory={allPatientsHistory}
                         selectedPatientId={selectedPatientId}
                         onSelectPatient={selectPatient}
                         simulatorOn={simulatorOn}

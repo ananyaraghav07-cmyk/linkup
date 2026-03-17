@@ -1,6 +1,6 @@
 /**
  * LifeLink Twin - Multi-Patient Overview Card
- * 
+ *
  * Shows all connected ambulances/patients with dropdown selection
  * and detailed view for the selected patient.
  * Optimized for dark and light mode.
@@ -10,9 +10,12 @@ import { useMemo, useState } from 'react';
 import { useLanguage } from '../i18n';
 import DashboardCard from './DashboardCard';
 
+import { getPatientRiskSortValue } from '../modules/doctorMonitoring';
+
 function MultiPatientCard({
     patients,
     allPatientsData,
+    doctorMetricsByPatientId,
     selectedPatientId,
     onSelectPatient
 }) {
@@ -63,10 +66,15 @@ function MultiPatientCard({
         }, {});
     }, [patients, allPatientsData]);
 
-    const selectedPatient = useMemo(() => (patients || []).find((p) => p.id === selectedPatientId) || null, [patients, selectedPatientId]);
+    const selectedPatient = useMemo(
+        () => (patients || []).find((p) => p.id === selectedPatientId) || null,
+        [patients, selectedPatientId]
+    );
+
     const selectedData = allPatientsData?.[selectedPatientId] || null;
     const selectedStatus = selectedData?.status || 'normal';
     const selectedVitals = selectedData?.vitals || {};
+    const selectedMetrics = doctorMetricsByPatientId?.[selectedPatientId] || null;
 
     const filteredPatients = useMemo(() => {
         const q = String(search || '').trim().toLowerCase();
@@ -77,6 +85,28 @@ function MultiPatientCard({
             return hay.includes(q);
         });
     }, [patients, search]);
+
+    const sortedPatients = useMemo(() => {
+        const list = filteredPatients || [];
+        const copy = list.slice();
+        copy.sort((a, b) => {
+            const aData = allPatientsData?.[a.id];
+            const bData = allPatientsData?.[b.id];
+            const aMetrics = doctorMetricsByPatientId?.[a.id] || null;
+            const bMetrics = doctorMetricsByPatientId?.[b.id] || null;
+
+            const ra = getPatientRiskSortValue({ patient: aData, metrics: aMetrics });
+            const rb = getPatientRiskSortValue({ patient: bData, metrics: bMetrics });
+            if (rb !== ra) return rb - ra;
+
+            // Tie-breaker: critical first, then warning.
+            const pr = { critical: 2, warning: 1, normal: 0 };
+            const pa = pr[aData?.status || 'normal'] || 0;
+            const pb = pr[bData?.status || 'normal'] || 0;
+            return pb - pa;
+        });
+        return copy;
+    }, [filteredPatients, allPatientsData, doctorMetricsByPatientId]);
 
     const patientCount = (patients || []).length;
 
@@ -131,7 +161,7 @@ function MultiPatientCard({
                                     value={selectedPatientId}
                                     onChange={(e) => onSelectPatient?.(e.target.value)}
                                 >
-                                    {(patients || []).map((p) => (
+                                    {sortedPatients.map((p) => (
                                         <option key={p.id} value={p.id}>
                                             {p.id} • {p.name} ({p.ambulance})
                                         </option>
@@ -163,11 +193,12 @@ function MultiPatientCard({
                                         overflowX: 'hidden',
                                     }}
                                 >
-                                    {filteredPatients.map((patient) => {
+                                    {sortedPatients.map((patient) => {
                                         const pData = allPatientsData?.[patient.id];
                                         const pStatus = pData?.status || 'normal';
                                         const pVitals = pData?.vitals || {};
                                         const isSelected = patient.id === selectedPatientId;
+                                        const metrics = doctorMetricsByPatientId?.[patient.id] || null;
 
                                         return (
                                             <button
@@ -211,8 +242,19 @@ function MultiPatientCard({
                                                     <div className="d-flex" style={{ gap: '10px', flex: '0 0 auto', color: 'var(--text-secondary)' }}>
                                                         <small style={{ color: pVitals.heartRate > 120 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>❤️ {pVitals.heartRate ?? '--'}</small>
                                                         <small style={{ color: pVitals.spo2 < 90 ? 'var(--status-critical)' : 'var(--text-secondary)' }}>🫁 {pVitals.spo2 ?? '--'}%</small>
+                                                        <small style={{ color: 'var(--text-secondary)' }}>🧾 {metrics ? `${Math.round(metrics.riskScore)}/100` : '--/--'}</small>
                                                     </div>
                                                 </div>
+
+                                                {metrics && (
+                                                    <div className="d-flex mt-2" style={{ gap: '8px', flexWrap: 'wrap' }}>
+                                                        <span className={`badge ${metrics.alertLevel === 'Critical' ? 'bg-danger' : metrics.alertLevel === 'High Risk' ? 'bg-warning text-dark' : metrics.earlyRisk ? 'bg-secondary' : 'bg-success'}`}>
+                                                            {metrics.alertLevel || 'Stable'}
+                                                        </span>
+                                                        <span className="badge bg-info">Stability {Math.round(metrics.stabilityScore)}/100</span>
+                                                        {metrics.earlyRisk && <span className="badge bg-secondary">Early warning</span>}
+                                                    </div>
+                                                )}
                                             </button>
                                         );
                                     })}
@@ -268,6 +310,21 @@ function MultiPatientCard({
                                         </span>
                                     </div>
                                 </div>
+
+                                {selectedMetrics && (
+                                    <div className="mt-3 d-flex" style={{ gap: '8px', flexWrap: 'wrap' }}>
+                                        <span className="badge bg-info">Risk {Math.round(selectedMetrics.riskScore)}/100</span>
+                                        <span className="badge bg-info">Stability {Math.round(selectedMetrics.stabilityScore)}/100</span>
+                                        {selectedMetrics.earlyRisk && <span className="badge bg-secondary">Early warning</span>}
+                                        {selectedMetrics.lastAlertTime && <span className="badge bg-warning text-dark">Last alert: {selectedMetrics.lastAlertTime}</span>}
+                                    </div>
+                                )}
+
+                                {selectedMetrics?.summary && (
+                                    <div className="mt-3 small" style={{ color: 'var(--text-secondary)' }}>
+                                        🧠 {selectedMetrics.summary}
+                                    </div>
+                                )}
 
                                 {/* Vitals Summary */}
                                 {selectedData && (

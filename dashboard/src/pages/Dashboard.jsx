@@ -4,7 +4,7 @@
  * Main dashboard with vital signs overview and multi-patient support.
  * Doctor-only view.
  */
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import HeartRateCard from '../components/HeartRateCard';
 import Spo2Card from '../components/Spo2Card';
 import TemperatureCard from '../components/TemperatureCard';
@@ -12,8 +12,11 @@ import StatusCard from '../components/StatusCard';
 import PredictiveHealthCard from '../components/PredictiveHealthCard';
 import HospitalReadinessCard from '../components/HospitalReadinessCard';
 import MultiPatientCard from '../components/MultiPatientCard';
+import DoctorAlertReviewCard from '../components/DoctorAlertReviewCard';
 // Role-Based Access Control
 import { isMedicalRole, getRoleIcon } from '../utils/rbac';
+
+import { computeDoctorMetrics } from '../modules/doctorMonitoring';
 
 const AmbulanceTrackerCard = lazy(() => import('../components/AmbulanceTrackerCard'));
 const DigitalTwinVisualizationCard = lazy(() => import('../components/DigitalTwinVisualizationCard'));
@@ -36,6 +39,7 @@ function Dashboard({
     history,
     patients,
     allPatientsData,
+    allPatientsHistory,
     selectedPatientId,
     onSelectPatient,
     simulatorOn,
@@ -46,6 +50,24 @@ function Dashboard({
 }) {
     const vitals = patientData?.vitals || {};
     const status = patientData?.status || 'normal';
+
+    const doctorMetricsByPatientId = useMemo(() => {
+        // Works in simulator mode (multi-patient histories). In socket mode, computes
+        // for the selected patient (if history is available), and best-effort for others.
+        const out = {};
+        for (const p of patients || []) {
+            const d = allPatientsData?.[p.id];
+            if (!d) continue;
+
+            const h = (allPatientsHistory && allPatientsHistory[p.id])
+                ? allPatientsHistory[p.id]
+                : (p.id === selectedPatientId ? history : null);
+
+            const metrics = computeDoctorMetrics({ patient: d, history: h });
+            if (metrics) out[p.id] = metrics;
+        }
+        return out;
+    }, [patients, allPatientsData, allPatientsHistory, selectedPatientId, history]);
 
     const DashboardGrid = ({ children }) => (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
@@ -78,7 +100,20 @@ function Dashboard({
                                 <MultiPatientCard
                                     patients={patients}
                                     allPatientsData={allPatientsData}
+                                    doctorMetricsByPatientId={doctorMetricsByPatientId}
                                     selectedPatientId={selectedPatientId}
+                                    onSelectPatient={onSelectPatient}
+                                />
+                            </div>
+                        )}
+
+                        {/* Alert Review (full width) */}
+                        {patients && patients.length > 0 && (
+                            <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
+                                <DoctorAlertReviewCard
+                                    patients={patients}
+                                    allPatientsData={allPatientsData}
+                                    doctorMetricsByPatientId={doctorMetricsByPatientId}
                                     onSelectPatient={onSelectPatient}
                                 />
                             </div>
