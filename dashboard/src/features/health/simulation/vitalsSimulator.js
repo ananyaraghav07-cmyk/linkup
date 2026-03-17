@@ -212,6 +212,8 @@ export function createVitalsSimulator() {
     return {
       patientId: patient?.id,
       patientName: patient?.name,
+      patientAge: patient?.age,
+      patientGender: patient?.gender,
       ambulance: patient?.ambulance,
       location: patient?.location,
       condition: patient?.condition,

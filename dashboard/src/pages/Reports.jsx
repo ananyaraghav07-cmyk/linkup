@@ -19,10 +19,10 @@ function Reports({ patientData, history, events }) {
     // Report data
     const reportData = {
         patient: {
-            name: patientData?.patientName || 'John Doe',
-            id: patientData?.patientId || 'patient1',
-            age: 45,
-            gender: 'Male',
+            name: patientData?.patientName || 'Sharanya Sharma',
+            id: patientData?.patientId || 'AMB-001',
+            age: Number.isFinite(patientData?.patientAge) ? patientData.patientAge : 18,
+            gender: patientData?.patientGender || 'Female',
             bloodType: 'O+',
             admissionDate: '2026-01-28',
             department: 'Emergency Cardiology',

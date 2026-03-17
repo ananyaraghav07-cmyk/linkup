@@ -136,11 +136,11 @@ function App() {
 
   // Multi-Patient Support
   const [patients] = useState([
-    { id: 'AMB-001', name: 'Divvya Singh', ambulance: 'Ambulance 1', location: 'Sector 15, Noida', condition: 'Cardiac' },
-    { id: 'AMB-002', name: 'Sneha', ambulance: 'Ambulance 2', location: 'MG Road, Delhi', condition: 'Trauma' },
-    { id: 'AMB-003', name: 'Nistha', ambulance: 'Ambulance 3', location: 'Connaught Place', condition: 'Respiratory' },
-    { id: 'AMB-004', name: 'Shubhra', ambulance: 'Ambulance 4', location: 'Dwarka Sec 21', condition: 'Stroke' },
-    { id: 'AMB-005', name: 'Aditi', ambulance: 'Ambulance 5', location: 'Gurgaon Sec 14', condition: 'Cardiac' }
+    { id: 'AMB-001', name: 'Sharanya Sharma', age: 18, gender: 'Female', ambulance: 'Ambulance 1', location: 'Sector 15, Noida', condition: 'Cardiac' },
+    { id: 'AMB-002', name: 'Gayatri Desai', age: 18, gender: 'Female', ambulance: 'Ambulance 2', location: 'MG Road, Delhi', condition: 'Trauma' },
+    { id: 'AMB-003', name: 'Manasvi', age: 18, gender: 'Female', ambulance: 'Ambulance 3', location: 'Connaught Place', condition: 'Respiratory' },
+    { id: 'AMB-004', name: 'Chandana', age: 18, gender: 'Female', ambulance: 'Ambulance 4', location: 'Dwarka Sec 21', condition: 'Stroke' },
+    { id: 'AMB-005', name: 'Kalp', age: 19, gender: 'Female', ambulance: 'Ambulance 5', location: 'Gurgaon Sec 14', condition: 'Cardiac' }
   ]);
   const [selectedPatientId, setSelectedPatientId] = useState('AMB-001');
   const [allPatientsData, setAllPatientsData] = useState({});

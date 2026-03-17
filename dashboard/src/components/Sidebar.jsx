@@ -182,8 +182,8 @@ function Sidebar({
                             <span>👤</span>
                         </div>
                         <div className="patient-details">
-                            <span className="patient-name-sm">{patientData?.patientName || 'Krishu Jha'}</span>
-                            <span className="patient-id-sm">ID: {patientData?.patientId || 'patient1'}</span>
+                            <span className="patient-name-sm">{patientData?.patientName || 'Sharanya Sharma'}</span>
+                            <span className="patient-id-sm">ID: {patientData?.patientId || 'AMB-001'}</span>
                         </div>
                         <span className={`status-indicator-sm ${patientData?.status === 'critical' ? 'critical' : patientData?.status === 'warning' ? 'warning' : 'online'}`}></span>
                     </div>
