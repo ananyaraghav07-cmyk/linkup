@@ -1,7 +1,7 @@
 {
-    "name": "lifelink-twin",
+    "name": "linkup",
     "version": "1.0.0",
-    "description": "Real-time Emergency Health IoT Digital Twin System",
+    "description": "Linkup Digital Twin Dashboard",
     "main": "server/index.js",
     "scripts": {
         "start:simulator": "node simulator/index.js",

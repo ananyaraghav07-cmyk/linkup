@@ -139,7 +139,7 @@ function Navbar({
                 {/* Logo + Title (mobile) */}
                 <div className="navbar-title d-lg-none">
                     <span className="title-icon">🏥</span>
-                    <span className="title-text">{t('lifelinkTwin')}</span>
+                    <span className="title-text">Linkup</span>
                 </div>
 
                 {/* Breadcrumb - visible on desktop */}

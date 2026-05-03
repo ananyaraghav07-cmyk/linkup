@@ -92,44 +92,14 @@ function Dashboard({
                     </p>
                 </div>
 
-                <div className="space-y-8">
-                    <DashboardGrid>
-                        {/* Multi-Patient Overview (full width) */}
-                        {patients && patients.length > 0 && (
-                            <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
-                                <MultiPatientCard
-                                    patients={patients}
-                                    allPatientsData={allPatientsData}
-                                    doctorMetricsByPatientId={doctorMetricsByPatientId}
-                                    selectedPatientId={selectedPatientId}
-                                    onSelectPatient={onSelectPatient}
-                                />
-                            </div>
-                        )}
-
-                        {/* Alert Review (full width) */}
-                        {patients && patients.length > 0 && (
-                            <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
-                                <DoctorAlertReviewCard
-                                    patients={patients}
-                                    allPatientsData={allPatientsData}
-                                    doctorMetricsByPatientId={doctorMetricsByPatientId}
-                                    onSelectPatient={onSelectPatient}
-                                />
-                            </div>
-                        )}
-
-                        {/* Primary vitals */}
-                        <div className="min-w-0">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+                    {/* LEFT COLUMN: Primary Focus (8 cols) */}
+                    <div className="xl:col-span-8 space-y-6">
+                        {/* Vitals Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <HeartRateCard value={vitals.heartRate} history={history} status={status} />
-                        </div>
-                        <div className="min-w-0">
                             <Spo2Card value={vitals.spo2} status={status} />
-                        </div>
-                        <div className="min-w-0">
                             <TemperatureCard value={vitals.temperature} status={status} />
-                        </div>
-                        <div className="min-w-0">
                             <StatusCard
                                 status={status}
                                 patientName={patientData?.patientName}
@@ -138,34 +108,52 @@ function Dashboard({
                             />
                         </div>
 
-                        {/* Secondary insights */}
-                        <div className="sm:col-span-2 min-w-0">
-                            <PredictiveHealthCard
-                                vitals={vitals}
-                                history={history}
-                                patientId={selectedPatientId}
-                                simulatorOn={simulatorOn}
-                                worsenState={worsenState}
-                                onTriggerWorsen={onTriggerWorsen}
-                                onStopWorsen={onStopWorsen}
-                            />
-                        </div>
-                        <div className="sm:col-span-2 min-w-0">
-                            <HospitalReadinessCard patientData={patientData} />
-                        </div>
+                        {/* Digital Twin Visualization */}
+                        <Suspense fallback={<CardFallback title="Digital Twin Visualization" />}>
+                            <DigitalTwinVisualizationCard vitals={vitals} patientData={patientData} />
+                        </Suspense>
 
-                        {/* Larger widgets */}
-                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
-                            <Suspense fallback={<CardFallback title="Ambulance Tracker" />}>
-                                <AmbulanceTrackerCard />
-                            </Suspense>
-                        </div>
-                        <div className="sm:col-span-2 lg:col-span-3 2xl:col-span-4 min-w-0">
-                            <Suspense fallback={<CardFallback title="Digital Twin Visualization" />}>
-                                <DigitalTwinVisualizationCard vitals={vitals} patientData={patientData} />
-                            </Suspense>
-                        </div>
-                    </DashboardGrid>
+                        {/* Predictive Health Insights */}
+                        <PredictiveHealthCard
+                            vitals={vitals}
+                            history={history}
+                            patientId={selectedPatientId}
+                            simulatorOn={simulatorOn}
+                            worsenState={worsenState}
+                            onTriggerWorsen={onTriggerWorsen}
+                            onStopWorsen={onStopWorsen}
+                        />
+                    </div>
+
+                    {/* RIGHT COLUMN: Context & Management (4 cols) */}
+                    <div className="xl:col-span-4 space-y-6">
+                        {/* Multi-Patient Overview */}
+                        {patients && patients.length > 0 && (
+                            <MultiPatientCard
+                                patients={patients}
+                                allPatientsData={allPatientsData}
+                                doctorMetricsByPatientId={doctorMetricsByPatientId}
+                                selectedPatientId={selectedPatientId}
+                                onSelectPatient={onSelectPatient}
+                            />
+                        )}
+
+                        {/* Alert Review */}
+                        {patients && patients.length > 0 && (
+                            <DoctorAlertReviewCard
+                                patients={patients}
+                                allPatientsData={allPatientsData}
+                                doctorMetricsByPatientId={doctorMetricsByPatientId}
+                                onSelectPatient={onSelectPatient}
+                            />
+                        )}
+
+                        <HospitalReadinessCard patientData={patientData} />
+
+                        <Suspense fallback={<CardFallback title="Ambulance Tracker" />}>
+                            <AmbulanceTrackerCard />
+                        </Suspense>
+                    </div>
                 </div>
             </>
         );

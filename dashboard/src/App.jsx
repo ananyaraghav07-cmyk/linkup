@@ -551,7 +551,7 @@ function App() {
         <div className="login-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
           <div style={{ textAlign: 'center', color: 'white' }}>
             <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🏥</div>
-            <div style={{ fontSize: '1.2rem' }}>Loading LifeLink Twin...</div>
+            <div style={{ fontSize: '1.2rem' }}>Loading Linkup...</div>
           </div>
         </div>
       </LanguageProvider>
@@ -695,7 +695,7 @@ function App() {
 
               {/* Footer */}
               <footer className="main-footer">
-                <span>🏥 LifeLink Twin - Emergency Health IoT Digital Twin System</span>
+                <span>🏥 Linkup - Emergency Health IoT Digital Twin System</span>
                 <span className="footer-divider">•</span>
                 <span>Last Update: {lastUpdate || '--:--:--'}</span>
               </footer>

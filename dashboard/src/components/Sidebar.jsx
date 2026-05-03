@@ -95,7 +95,7 @@ function Sidebar({
                 <div className="sidebar-header">
                     <div className="sidebar-brand">
                         <span className="brand-icon">🏥</span>
-                        <span className="brand-text">{t('lifelinkTwin')}</span>
+                        <span className="brand-text">Linkup</span>
                     </div>
 
                     <div className="d-flex align-items-center" style={{ gap: '8px' }}>
