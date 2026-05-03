@@ -1,4 +1,4 @@
-# 🏥 LifeLink Twin
+# 🏥 Linkup
 
 **Real-time Emergency Health IoT Digital Twin System**
 
